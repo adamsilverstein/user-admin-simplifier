@@ -44,9 +44,6 @@ git commit -am "$COMMITMSG"
 echo "Tagging new version in git"
 git tag -a "$NEWVERSION1" -m "Tagging version $NEWVERSION1"
 
-echo "Pushing latest master to beanstalk, with tags"
-git push beanstalk master
-git push beanstalk master --tags
 
 echo "Pushing latest master to github, with tags"
 git push github master
