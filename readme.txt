@@ -36,6 +36,9 @@ Yes! In a multisite install, User Admin Simplifier works as follows:
 
 == Upgrade Notice ==
 
+= 0.6.4 =
+Tested up to WordPress 4.7.0.
+
 = 0.6.3 =
 Tested up to WordPress 4.0.0.
 Added icons for WordPress 4.0 plugin installer.
