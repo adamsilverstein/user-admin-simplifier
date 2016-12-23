@@ -46,8 +46,8 @@ git tag -a "$NEWVERSION1" -m "Tagging version $NEWVERSION1"
 
 
 echo "Pushing latest master to github, with tags"
-git push github master
-git push github master --tags
+git push
+git push --tags
 
 echo
 echo "Creating local copy of SVN repo ..."
@@ -74,8 +74,8 @@ svn status | grep -v "^.[ \t]*\..*" | grep "^?" | awk '{print $2}' | xargs svn a
 svn commit --username=$SVNUSER -m "$COMMITMSG"
 
 # echo "Creating new SVN tag & committing it"
-cd $SVNPATH
-svn copy ./trunk/ tags/$NEWVERSION1/
+cd $SVNPATH/trunk
+svn copy ./ tags/$NEWVERSION1/
 cd $SVNPATH/tags/$NEWVERSION1
 svn commit --username=$SVNUSER -m "Tag $NEWVERSION1"
 
