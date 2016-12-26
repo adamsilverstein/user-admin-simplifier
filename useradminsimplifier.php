@@ -20,14 +20,50 @@ License: GPLv2 or later
 		add_action( 'admin_head', 'uas_admin_js' );
 		add_action( 'admin_head', 'uas_admin_css' );
 		add_filter( 'plugin_action_links', 'uas_plugin_action_links', 10, 2 );
+		add_action( 'admin_bar_menu', 'uas_edit_admin_bar_menu', 999 );
 	}
 
-	function uas_edit_admin_menus() {
+
+	/**
+	 * Filter the admin bar dropdowns.
+	 */
+	function uas_edit_admin_bar_menu( $wp_admin_bar ) {
+		global $wp_admin_bar_menu_items;
+
+		$wp_admin_bar_menu_items = $wp_admin_bar->get_nodes();
+
+		return $wp_admin_bar;
+	}
+
+
+/*
+default core:
+add_action( 'admin_bar_menu', 'wp_admin_bar_my_account_menu', 0 );
+add_action( 'admin_bar_menu', 'wp_admin_bar_search_menu', 4 );
+add_action( 'admin_bar_menu', 'wp_admin_bar_my_account_item', 7 );
+// Site related.
+add_action( 'admin_bar_menu', 'wp_admin_bar_sidebar_toggle', 0 );
+add_action( 'admin_bar_menu', 'wp_admin_bar_wp_menu', 10 );
+add_action( 'admin_bar_menu', 'wp_admin_bar_my_sites_menu', 20 );
+add_action( 'admin_bar_menu', 'wp_admin_bar_site_menu', 30 );
+add_action( 'admin_bar_menu', 'wp_admin_bar_customize_menu', 40 );
+add_action( 'admin_bar_menu', 'wp_admin_bar_updates_menu', 50 );
+// Content related.
+if ( ! is_network_admin() && ! is_user_admin() ) {
+	add_action( 'admin_bar_menu', 'wp_admin_bar_comments_menu', 60 );
+	add_action( 'admin_bar_menu', 'wp_admin_bar_new_content_menu', 70 );
+}
+add_action( 'admin_bar_menu', 'wp_admin_bar_edit_menu', 80 );
+add_action( 'admin_bar_menu', 'wp_admin_bar_add_secondary_groups', 200 );
+
+*/function uas_edit_admin_menus() {
 		global $menu;
 		global $current_user;
 		global $storedmenu;
 		global $storedsubmenu;
 		global $submenu;
+
+
 		$storedmenu = $menu; //store the original menu
 		$storedsubmenu = $submenu; //store the original menu
 		$uas_options = uas_get_admin_options();
@@ -92,6 +128,8 @@ License: GPLv2 or later
 		global $submenu;
 		global $current_user;
 		global $storedmenu;
+		global $wp_admin_bar_menu_items;
+
 		if ( !isset( $storedmenu ) ) {
 			$storedmenu = $menu;
 		}
@@ -132,7 +170,7 @@ License: GPLv2 or later
 				<?php esc_html_e( 'Choose a user', 'user_admin_simplifier' ); ?>:
 			</h3>
 			<select id="uas_user_select" name="uas_user_select" >
-				<option>
+				<option><?php esc_html_e( 'Choose...', 'user_admin_simplifier' ); ?></option>
 <?php
 			$blogusers = get_users( 'orderby=nicename' );
 			foreach ( $blogusers as $user ) {
@@ -144,24 +182,29 @@ License: GPLv2 or later
 			</select>
 			</div>
 <?php
-			if( isset( $_POST['uas_user_select'] ) ) {
+	if( isset( $_POST['uas_user_select'] ) ) {
 ?>
 	<div class="uas_container" id="choosemenus">
 		<h3>
-			<?php esc_html_e( 'Select menus/submenus to disable for this user', 'user_admin_simplifier' ); ?>:
+			<?php esc_html_e( 'Select menus and submenus to disable for this user', 'user_admin_simplifier' ); ?>:
 		</h3>
 		<input class="uas_dummy" style="display:none;" type="checkbox" checked="checked" value="uas_dummy" id="menuselection[]" name="menuselection[]">
 <?php
 				//lets start with top level menus stored in global $menu
 				//will add submenu support if needed later
 				$rowcount = 0;
+
+				// Iterate thru each menu item.
 				foreach( $storedmenu as $menuitem ) {
 					$menuuseroption = 0;
+
+					// Don't process menu separators.
 					if ( !( 'wp-menu-separator' == $menuitem[4] ) ) {
-						//reset							$uas_options[ $uas_selecteduser ][ $menuitem[5] ] = 0;
+
+						// There posted data?
 						if ( $menusectionsubmitted ) {
 							if ( isset( $nowselected[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] ) ) { //any selected options for this user/menu
-								$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] = $nowselected[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] ;
+								$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $menuitem[5] ) ] = $nowselected[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] ;
 							}
 							else {
 								$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] = 0;
@@ -186,7 +229,7 @@ License: GPLv2 or later
 									$submenuuseroption = 0;
 									if ( $menusectionsubmitted ) { //deal with submitted checkboxes
 										if ( isset( $nowselected[ $uas_selecteduser ][ $combinedname ] ) ) { // selected option for this user/submenu
-											$submenuuseroption = $uas_options[ $uas_selecteduser ][ $combinedname ] = $nowselected[ $uas_selecteduser ][ $combinedname ] ;
+											$submenuuseroption = $uas_options[ $uas_selecteduser ][ $combinedname ] = $nowselected[ $uas_selecteduser ][ $combinedname ];
 										}
 										else {
 											$uas_options[ $uas_selecteduser ][ $combinedname ] = 0;
@@ -208,9 +251,76 @@ License: GPLv2 or later
 					}
 				}
 ?>
-	<input name="uas_save" type="submit" id="uas_save" value="<?php esc_attr_e( 'Save Changes', 'user_admin_simplifier' ); ?>" /> <br />
-	<?php esc_html_e( 'or', 'user_admin_simplifier' ); ?>:
-	<input name="uas_reset" type="submit" id="uas_reset" value="<?php esc_attr_e( 'Clear User Settings', 'user_admin_simplifier' ); ?>" />
+	<hr />
+		<h3>
+			<?php esc_html_e( 'Select admin bar menus and submenus to disable for this user', 'user_admin_simplifier' ); ?>:
+		</h3>
+	<?php
+	$subrowcount = 0;
+
+//	var_dump($wp_admin_bar_menu_items);die;
+	// Iterate thru each adminbar item.
+	foreach( $wp_admin_bar_menu_items as $menu_bar_item ) {
+		if (
+			$menu_bar_item->title &&         /* exclude false */
+			'' !==  $menu_bar_item->title && /* exclude blank */
+			! $menu_bar_item->parent &&      /* exclude children */
+			'Menu' !== wp_strip_all_tags( $menu_bar_item->title )
+		) {
+
+			$menuuseroption = uas_process_options( $menusectionsubmitted, $menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
+		error_log($menu_bar_item->id . ' - ' . $menuuseroption );
+	?>
+			<p class="<?php echo ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) ?>">
+				<input type="checkbox" name="menuselection[]" id="menuselection[]" value="<?php echo sanitize_key( $menu_bar_item->id ) ?>" <?php
+
+
+				checked( 1, $menuuseroption, true ); ?> />
+			<?php
+				echo uas_clean_menu_name( wp_strip_all_tags( $menu_bar_item->id ) );
+			?>
+			</p>
+
+	<?php
+			$wrapped = false;
+
+			// Add all the children of this menu item.
+			foreach( $wp_admin_bar_menu_items as $sub_menu_bar_item ) {
+				if (
+					0 === strpos( $sub_menu_bar_item->parent, $menu_bar_item->id ) &&
+					$sub_menu_bar_item->title &&
+					'' !== wp_strip_all_tags( $sub_menu_bar_item->title )
+				) {
+
+					// Only add the wrapper once.
+					if ( ! $wrapped ) {
+						echo ( '<div class="submenu uas-unselected"><a href="javascript:;">'. esc_html__( 'Show submenus', 'user_admin_simplifier' ) . '</a></div><div class="submenuinner">' );
+						$wrapped = true;
+					}
+
+					$combinedname = sanitize_key ( ( $sub_menu_bar_item->parent ? $sub_menu_bar_item->parent . '-' : '')   . $sub_menu_bar_item->id );
+
+					$menuuseroption = uas_process_options( $menusectionsubmitted, $combinedname, $nowselected, $uas_options, $uas_selecteduser );
+
+					echo( '<p class='. ( ( 0 == $subrowcount++ %2 ) ? '"submain"' : '"subalternate"' ) . '>' .
+						'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' .
+						'value="'. $combinedname . '" '.
+						checked( 1, $menuuseroption, false ) .
+						' /> ' . uas_clean_menu_name( $sub_menu_bar_item->title ) . '</p>' );
+				}
+			}
+			if ( $wrapped ) {
+				echo '</div>';
+			}
+
+		}
+
+	}
+	?>
+
+	<input name="uas_save" type="submit" id="uas_save" class="button button-primary" value="<?php esc_attr_e( 'Save Changes', 'user_admin_simplifier' ); ?>" /> <br />
+	<?php esc_html_e( 'or', 'user_admin_simplifier' ); ?>: <br />
+	<input name="uas_reset" type="submit" id="uas_reset" class="button" value="<?php esc_attr_e( 'Clear User Settings', 'user_admin_simplifier' ); ?>" />
 	</div>
 	<?php
 			}
@@ -218,6 +328,7 @@ License: GPLv2 or later
 </form>
 </div>
  <?php
+				//error_log(json_encode($uas_options));
 uas_save_admin_options( $uas_options );
 	}
 	function uas_admin_js() {
@@ -248,6 +359,30 @@ uas_save_admin_options( $uas_options );
 </script>
 <?php
 }
+
+/**
+ * Process options.
+ */
+function uas_process_options( $menusectionsubmitted, $id, $nowselected, &$uas_options, $uas_selecteduser ) {
+	if ( $menusectionsubmitted ) {
+		if ( isset( $nowselected[ $uas_selecteduser ][ sanitize_key( $id )  ] ) ) { //any selected options for this user/menu
+			$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $id ) ] = $nowselected[ $uas_selecteduser ][ sanitize_key( $id )  ] ;
+		}
+		else {
+			$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $id ) ] = 0;
+		}
+	}
+	if ( isset( $uas_options[ $uas_selecteduser ][ sanitize_key( $id )  ] ) ) { //any saved options for this user/menu
+		$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $id )  ];
+	} else {
+		$menuuseroption = 0;
+		$uas_options[ $uas_selecteduser ][ sanitize_key( $id ) ] = 0;
+	}
+
+	return $menuuseroption;
+
+}
+
 	function uas_admin_css() {
 ?>
 <style type="text/css">
