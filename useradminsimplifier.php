@@ -32,31 +32,12 @@ License: GPLv2 or later
 
 		$wp_admin_bar_menu_items = $wp_admin_bar->get_nodes();
 
+		// Remove nodes for the current user.
+
 		return $wp_admin_bar;
 	}
 
-
-/*
-default core:
-add_action( 'admin_bar_menu', 'wp_admin_bar_my_account_menu', 0 );
-add_action( 'admin_bar_menu', 'wp_admin_bar_search_menu', 4 );
-add_action( 'admin_bar_menu', 'wp_admin_bar_my_account_item', 7 );
-// Site related.
-add_action( 'admin_bar_menu', 'wp_admin_bar_sidebar_toggle', 0 );
-add_action( 'admin_bar_menu', 'wp_admin_bar_wp_menu', 10 );
-add_action( 'admin_bar_menu', 'wp_admin_bar_my_sites_menu', 20 );
-add_action( 'admin_bar_menu', 'wp_admin_bar_site_menu', 30 );
-add_action( 'admin_bar_menu', 'wp_admin_bar_customize_menu', 40 );
-add_action( 'admin_bar_menu', 'wp_admin_bar_updates_menu', 50 );
-// Content related.
-if ( ! is_network_admin() && ! is_user_admin() ) {
-	add_action( 'admin_bar_menu', 'wp_admin_bar_comments_menu', 60 );
-	add_action( 'admin_bar_menu', 'wp_admin_bar_new_content_menu', 70 );
-}
-add_action( 'admin_bar_menu', 'wp_admin_bar_edit_menu', 80 );
-add_action( 'admin_bar_menu', 'wp_admin_bar_add_secondary_groups', 200 );
-
-*/function uas_edit_admin_menus() {
+	function uas_edit_admin_menus() {
 		global $menu;
 		global $current_user;
 		global $storedmenu;
@@ -201,8 +182,8 @@ add_action( 'admin_bar_menu', 'wp_admin_bar_add_secondary_groups', 200 );
 					// Don't process menu separators.
 					if ( !( 'wp-menu-separator' == $menuitem[4] ) ) {
 
+						// Process the values for this option.
 						$menuuseroption = uas_process_options( $menusectionsubmitted, $menuitem[5], $nowselected, $uas_options, $uas_selecteduser );
-
 
 						echo 	'<p class='. ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) . '>' .
 								'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' . 'value="'. sanitize_key( $menuitem[5] )  .'" ' . ( 1 == $menuuseroption ? 'checked="checked"' : '' ) . ' /> ' .
@@ -256,6 +237,7 @@ add_action( 'admin_bar_menu', 'wp_admin_bar_add_secondary_groups', 200 );
 			'Menu' !== wp_strip_all_tags( $menu_bar_item->title )
 		) {
 
+			// Process the values for this option.
 			$menuuseroption = uas_process_options( $menusectionsubmitted, $menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
 		error_log($menu_bar_item->id . ' - ' . $menuuseroption );
 	?>
@@ -288,6 +270,7 @@ add_action( 'admin_bar_menu', 'wp_admin_bar_add_secondary_groups', 200 );
 
 					$combinedname = sanitize_key ( ( $sub_menu_bar_item->parent ? $sub_menu_bar_item->parent . '-' : '')   . $sub_menu_bar_item->id );
 
+					// Process the values for this option.
 					$menuuseroption = uas_process_options( $menusectionsubmitted, $combinedname, $nowselected, $uas_options, $uas_selecteduser );
 
 					echo( '<p class='. ( ( 0 == $subrowcount++ %2 ) ? '"submain"' : '"subalternate"' ) . '>' .
@@ -300,9 +283,7 @@ add_action( 'admin_bar_menu', 'wp_admin_bar_add_secondary_groups', 200 );
 			if ( $wrapped ) {
 				echo '</div>';
 			}
-
 		}
-
 	}
 	?>
 
@@ -316,8 +297,7 @@ add_action( 'admin_bar_menu', 'wp_admin_bar_add_secondary_groups', 200 );
 </form>
 </div>
  <?php
-				//error_log(json_encode($uas_options));
-uas_save_admin_options( $uas_options );
+	uas_save_admin_options( $uas_options );
 	}
 	function uas_admin_js() {
 ?>
