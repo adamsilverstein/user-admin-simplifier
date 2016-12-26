@@ -21,6 +21,10 @@ License: GPLv2 or later
 		add_action( 'admin_head', 'uas_admin_css' );
 		add_filter( 'plugin_action_links', 'uas_plugin_action_links', 10, 2 );
 		add_action( 'admin_bar_menu', 'uas_edit_admin_bar_menu', 999 );
+
+		// Remove the admin bar?
+		// wp-toolbar remove from HTML
+		add_filter( 'wp_admin_bar_class', '__return_false' );
 	}
 
 
@@ -29,11 +33,29 @@ License: GPLv2 or later
 	 */
 	function uas_edit_admin_bar_menu( $wp_admin_bar ) {
 		global $wp_admin_bar_menu_items;
+		global $current_user;
 
+		// Store the menubar nodes (menu items) in a global.
 		$wp_admin_bar_menu_items = $wp_admin_bar->get_nodes();
+		$uas_options = uas_get_admin_options();
 
 		// Remove nodes for the current user.
+		foreach( $wp_admin_bar_menu_items as $menu_item ) {
+			if (
+				isset( $uas_options[ $current_user->user_nicename ] ) &&
+				isset( $uas_options[ $current_user->user_nicename ][ $menu_item->id ] ) &&
+				1 === $uas_options[ $current_user->user_nicename ][ $menu_item->id ]
+			) {
+				$wp_admin_bar->remove_node( $menu_item->id );
+				if ( 'user-actions' === $menu_item->id ) {
+					$wp_admin_bar->remove_node( 'my-account' );
+				}
+			}
+		}
 
+
+		//
+		error_log(json_encode($wp_admin_bar->get_nodes()));
 		return $wp_admin_bar;
 	}
 
@@ -195,20 +217,8 @@ License: GPLv2 or later
 								$subrowcount = 0;
 								foreach ( $storedsubmenu[ $topmenu] as $subsub ) {
 									$combinedname = sanitize_key( $menuitem[5] . $subsub[2] );
-									$submenuuseroption = 0;
-									if ( $menusectionsubmitted ) { //deal with submitted checkboxes
-										if ( isset( $nowselected[ $uas_selecteduser ][ $combinedname ] ) ) { // selected option for this user/submenu
-											$submenuuseroption = $uas_options[ $uas_selecteduser ][ $combinedname ] = $nowselected[ $uas_selecteduser ][ $combinedname ];
-										}
-										else {
-											$uas_options[ $uas_selecteduser ][ $combinedname ] = 0;
-										}
-									}
-									if ( isset( $uas_options[ $uas_selecteduser ][ $combinedname ] ) ) { // now show saved options for this user/submenu
-										$submenuuseroption = $uas_options[ $uas_selecteduser ][ $combinedname ];
-									} else {
-										$uas_options[ $uas_selecteduser ][ $combinedname ] = 0;
-									}
+									$submenuuseroption = uas_process_options( $menusectionsubmitted, $combinedname, $nowselected, $uas_options, $uas_selecteduser );
+
 									echo( '<p class='. ( ( 0 == $subrowcount++ %2 ) ? '"submain"' : '"subalternate"' ) . '>' .
 										'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' .
 										'value="'. $combinedname . '" ' . ( 1 == $submenuuseroption ? 'checked="checked"' : '' ) .
@@ -226,20 +236,35 @@ License: GPLv2 or later
 		</h3>
 	<?php
 	$subrowcount = 0;
+	$title_map = array(
+		'wp-logo' => '(W)ordPress',
+		'site-name' => 'Site',
+		'updates' => 'Updates',
+		'comments' => 'Comments',
+		'new-content' => '+ New',
+		'my-account' => 'User Menu',
+	);
 
-//	var_dump($wp_admin_bar_menu_items);die;
+
+	// Move user-actions to the end of the list.
+	$wp_admin_bar_menu_items[] = array_shift( $wp_admin_bar_menu_items );
+	//var_dump($wp_admin_bar_menu_items);die;
 	// Iterate thru each adminbar item.
 	foreach( $wp_admin_bar_menu_items as $menu_bar_item ) {
 		if (
 			$menu_bar_item->title &&         /* exclude false */
 			'' !==  $menu_bar_item->title && /* exclude blank */
 			! $menu_bar_item->parent &&      /* exclude children */
-			'Menu' !== wp_strip_all_tags( $menu_bar_item->title )
+			'Menu' !== wp_strip_all_tags( $menu_bar_item->title ) ||
+			'user-actions' === $menu_bar_item->id
 		) {
 
 			// Process the values for this option.
 			$menuuseroption = uas_process_options( $menusectionsubmitted, $menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
-		error_log($menu_bar_item->id . ' - ' . $menuuseroption );
+			error_log($menu_bar_item->id);
+			$title = isset( $title_map[ $menu_bar_item->id ] ) ?
+						$title_map[ $menu_bar_item->id ] :
+						$menu_bar_item->title;
 	?>
 			<p class="<?php echo ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) ?>">
 				<input type="checkbox" name="menuselection[]" id="menuselection[]" value="<?php echo sanitize_key( $menu_bar_item->id ) ?>" <?php
@@ -247,12 +272,15 @@ License: GPLv2 or later
 
 				checked( 1, $menuuseroption, true ); ?> />
 			<?php
-				echo uas_clean_menu_name( wp_strip_all_tags( $menu_bar_item->id ) );
+				echo wp_strip_all_tags( $title );
 			?>
 			</p>
 
 	<?php
 			$wrapped = false;
+
+			$subtitle_map = array(
+			);
 
 			// Add all the children of this menu item.
 			foreach( $wp_admin_bar_menu_items as $sub_menu_bar_item ) {
@@ -268,16 +296,18 @@ License: GPLv2 or later
 						$wrapped = true;
 					}
 
-					$combinedname = sanitize_key ( ( $sub_menu_bar_item->parent ? $sub_menu_bar_item->parent . '-' : '')   . $sub_menu_bar_item->id );
-
 					// Process the values for this option.
-					$menuuseroption = uas_process_options( $menusectionsubmitted, $combinedname, $nowselected, $uas_options, $uas_selecteduser );
+					$menuuseroption = uas_process_options( $menusectionsubmitted, $sub_menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
 
+					$title = isset( $subtitle_map[ $sub_menu_bar_item->id ] ) ?
+								$subtitle_map[ $sub_menu_bar_item->id ] :
+								$sub_menu_bar_item->title;
+					error_log($title);
 					echo( '<p class='. ( ( 0 == $subrowcount++ %2 ) ? '"submain"' : '"subalternate"' ) . '>' .
 						'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' .
-						'value="'. $combinedname . '" '.
+						'value="'. $sub_menu_bar_item->id . '" '.
 						checked( 1, $menuuseroption, false ) .
-						' /> ' . uas_clean_menu_name( $sub_menu_bar_item->title ) . '</p>' );
+						' /> ' . wp_strip_all_tags( $title ) . '</p>' );
 				}
 			}
 			if ( $wrapped ) {
