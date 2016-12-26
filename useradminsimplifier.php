@@ -201,21 +201,9 @@ add_action( 'admin_bar_menu', 'wp_admin_bar_add_secondary_groups', 200 );
 					// Don't process menu separators.
 					if ( !( 'wp-menu-separator' == $menuitem[4] ) ) {
 
-						// There posted data?
-						if ( $menusectionsubmitted ) {
-							if ( isset( $nowselected[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] ) ) { //any selected options for this user/menu
-								$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $menuitem[5] ) ] = $nowselected[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] ;
-							}
-							else {
-								$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] = 0;
-							}
-						}
-						if ( isset( $uas_options[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] ) ) { //any saved options for this user/menu
-							$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ];
-						} else {
-							$menuuseroption = 0;
-							$uas_options[ $uas_selecteduser ][ sanitize_key( $menuitem[5] )  ] = 0;
-						}
+						$menuuseroption = uas_process_options( $menusectionsubmitted, $menuitem[5], $nowselected, $uas_options, $uas_selecteduser );
+
+
 						echo 	'<p class='. ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) . '>' .
 								'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' . 'value="'. sanitize_key( $menuitem[5] )  .'" ' . ( 1 == $menuuseroption ? 'checked="checked"' : '' ) . ' /> ' .
 								uas_clean_menu_name( $menuitem[0] ) . "</p>";
