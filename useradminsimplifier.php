@@ -14,6 +14,8 @@ License: GPLv2 or later
 	//future: implement show only user's available menus, eg. less than admins as per suggestion
 
 	function uas_init() {
+		global $current_user;
+
 		wp_enqueue_script( 'jquery' );
 		add_action( 'admin_menu', 'uas_add_admin_menu', 99 );
 		add_action( 'admin_head', 'uas_edit_admin_menus', 100 );
@@ -23,10 +25,31 @@ License: GPLv2 or later
 		add_action( 'admin_bar_menu', 'uas_edit_admin_bar_menu', 999 );
 
 		// Remove the admin bar?
-		// wp-toolbar remove from HTML
-		add_filter( 'wp_admin_bar_class', '__return_false' );
+		$uas_options = uas_get_admin_options();
+		if (
+			isset( $uas_options[ $current_user->user_nicename ] ) &&
+			isset( $uas_options[ $current_user->user_nicename ][ 'disable-admin-bar' ] ) &&
+			1 === $uas_options[ $current_user->user_nicename ][ 'disable-admin-bar' ]
+		) {
+			add_action( 'admin_head', 'uas_hide_admin_bar' );
+		}
 	}
 
+	/**
+	 * Remove the 'wp-toolbar' class from HTML.
+	 */
+	function uas_hide_admin_bar() {
+		?>
+		<script type="text/javascript">
+			jQuery( 'html' ).removeClass( 'wp-toolbar' );
+		</script>
+		<style>
+			#wpadminbar {
+				display: none;
+			}
+		</style>
+		<?php
+	}
 
 	/**
 	 * Filter the admin bar dropdowns.
@@ -189,7 +212,7 @@ License: GPLv2 or later
 ?>
 	<div class="uas_container" id="choosemenus">
 		<h3>
-			<?php esc_html_e( 'Select menus and submenus to disable for this user', 'user_admin_simplifier' ); ?>:
+			<?php esc_html_e( 'Disable menus/submenus', 'user_admin_simplifier' ); ?>:
 		</h3>
 		<input class="uas_dummy" style="display:none;" type="checkbox" checked="checked" value="uas_dummy" id="menuselection[]" name="menuselection[]">
 <?php
@@ -229,13 +252,22 @@ License: GPLv2 or later
 						}
 					}
 				}
+	$subrowcount = 0;
 ?>
 	<hr />
 		<h3>
-			<?php esc_html_e( 'Select admin bar menus and submenus to disable for this user', 'user_admin_simplifier' ); ?>:
+			<?php esc_html_e( 'Disable the admin bar', 'user_admin_simplifier' ); ?>:
+		</h3>
+		<p class="<?php echo ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) ?>">
+			<input type="checkbox" name="menuselection[]" id="menuselection[]" value="disable-admin-bar" <?php
+			checked( 1, $uas_options[ $current_user->user_nicename ][ 'disable-admin-bar' ], true ); ?> />
+		<?php
+			esc_html_e( 'Completely disable the admin bar for this user.', 'user_admin_simplifier' );
+		?>
+		</p>		<h3>
+			<?php esc_html_e( 'Disable admin bar menus/submenus', 'user_admin_simplifier' ); ?>:
 		</h3>
 	<?php
-	$subrowcount = 0;
 	$title_map = array(
 		'wp-logo' => '(W)ordPress',
 		'site-name' => 'Site',
