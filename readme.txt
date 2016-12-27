@@ -4,7 +4,7 @@ Donate link:
 Tags: admin simplify menus submenus
 Requires at least: 3.0.1
 Tested up to: 4.7.0
-Stable tag: 0.6.5
+Stable tag: 0.7.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Lets any Administrator simplify the WordPress Admin interface, on a per-user bas
 
 == Description ==
 
-Lets any Administrator simplify the WordPress Admin interface, on a per-user basis, by turning specific menu/submenu sections off.
+Lets any Administrator simplify the WordPress Admin interface, on a per-user basis. Hide any specific menu or submenu (including in the admin bar) or hide the admin bar entirely.
 
 == Installation ==
 
@@ -35,6 +35,10 @@ Yes! In a multisite install, User Admin Simplifier works as follows:
 * disabling menus for a user only affects current site. user's menus remain unaffected in other sites
 
 == Upgrade Notice ==
+
+= 0.7.0 =
+Enabled editing the admin bar menus and submenus.
+Enables hiding the admin bar entirely.
 
 = 0.6.4 =
 Tested up to WordPress 4.7.0.
