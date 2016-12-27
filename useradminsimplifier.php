@@ -76,9 +76,6 @@ License: GPLv2 or later
 			}
 		}
 
-
-		//
-		error_log(json_encode($wp_admin_bar->get_nodes()));
 		return $wp_admin_bar;
 	}
 
@@ -334,7 +331,6 @@ License: GPLv2 or later
 					$title = isset( $subtitle_map[ $sub_menu_bar_item->id ] ) ?
 								$subtitle_map[ $sub_menu_bar_item->id ] :
 								$sub_menu_bar_item->title;
-					error_log($title);
 					echo( '<p class='. ( ( 0 == $subrowcount++ %2 ) ? '"submain"' : '"subalternate"' ) . '>' .
 						'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' .
 						'value="'. $sub_menu_bar_item->id . '" '.
