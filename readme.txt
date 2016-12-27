@@ -60,6 +60,13 @@ Make css class for +/- more specific to avoid conflicts.
 
 == Changelog ==
 
+= 0.7.0 =
+Enabled editing the admin bar menus and submenus.
+Enables hiding the admin bar entirely.
+
+= 0.6.4 =
+Tested up to WordPress 4.7.0.
+
 = 0.6.3 =
 Add icons for 4.0 plugin browser.
 Tested up to WordPress 4.0.
