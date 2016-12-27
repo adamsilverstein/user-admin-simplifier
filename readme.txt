@@ -4,7 +4,7 @@ Donate link:
 Tags: admin simplify menus submenus
 Requires at least: 3.0.1
 Tested up to: 4.7.0
-Stable tag: 0.7.0
+Stable tag: 0.7.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,7 +36,7 @@ Yes! In a multisite install, User Admin Simplifier works as follows:
 
 == Upgrade Notice ==
 
-= 0.7.0 =
+= 0.7.1 =
 Enabled editing the admin bar menus and submenus.
 Enables hiding the admin bar entirely.
 
@@ -60,7 +60,7 @@ Make css class for +/- more specific to avoid conflicts.
 
 == Changelog ==
 
-= 0.7.0 =
+= 0.7.1 =
 Enabled editing the admin bar menus and submenus.
 Enables hiding the admin bar entirely.
 
