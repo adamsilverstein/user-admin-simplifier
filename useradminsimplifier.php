@@ -311,6 +311,23 @@ License: GPLv2 or later
 
 	// Move user-actions to the end of the list.
 	$wp_admin_bar_menu_items[] = array_shift( $wp_admin_bar_menu_items );
+
+	// Add some common front end actions.
+	$add_for_front = array(
+		'customize' => (object) array(
+			'id' => 'customize',
+			'title' => 'Customize',
+			'parent' => false,
+		),
+		'edit' => (object) array(
+			'id' => 'edit',
+			'title' => 'Edit Page',
+			'parent' => false,
+		)
+	);
+
+	$wp_admin_bar_menu_items = array_merge( $wp_admin_bar_menu_items, $add_for_front );
+
 	//var_dump($wp_admin_bar_menu_items);die;
 	// Iterate thru each adminbar item.
 	foreach( $wp_admin_bar_menu_items as $menu_bar_item ) {
@@ -324,7 +341,6 @@ License: GPLv2 or later
 
 			// Process the values for this option.
 			$menuuseroption = uas_process_option( $menusectionsubmitted, $menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
-			error_log($menu_bar_item->id);
 			$title = isset( $title_map[ $menu_bar_item->id ] ) ?
 						$title_map[ $menu_bar_item->id ] :
 						$menu_bar_item->title;
