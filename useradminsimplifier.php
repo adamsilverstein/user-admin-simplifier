@@ -11,7 +11,7 @@ License: GPLv2 or later
 
 	add_action( 'init', 'uas_init' );
 
-	//future: implement show only user's available menus, eg. less than admins as per suggestion
+	//@todo show only user's available menus, eg. less than admins as per suggestion
 
 	function uas_init() {
 		global $current_user;
@@ -31,12 +31,17 @@ License: GPLv2 or later
 			isset( $uas_options[ $current_user->user_nicename ][ 'disable-admin-bar' ] ) &&
 			1 === $uas_options[ $current_user->user_nicename ][ 'disable-admin-bar' ]
 		) {
+			// Hide on the admin side where its not possible to disable.
 			add_action( 'admin_head', 'uas_hide_admin_bar' );
+
+			// Disable on the front end.
+			add_filter( 'show_admin_bar', '__return_false' );
+
 		}
 	}
 
 	/**
-	 * Remove the 'wp-toolbar' class from HTML.
+	 * Hide the WordPress admin bar on the admin side.
 	 */
 	function uas_hide_admin_bar() {
 		?>
@@ -79,6 +84,9 @@ License: GPLv2 or later
 		return $wp_admin_bar;
 	}
 
+	/**
+	 * Edit the items available in the menu globals based on the current user settings.
+	 */
 	function uas_edit_admin_menus() {
 		global $menu;
 		global $current_user;
@@ -113,6 +121,9 @@ License: GPLv2 or later
 		}
 	}
 
+	/**
+	 * Add a settings link to the pluginsd page.
+	 */
 	function uas_plugin_action_links( $links, $file ) {
 		if ( $file == plugin_basename( __FILE__ ) ) {
 			$uas_links = '<a href="' . get_admin_url() . 'admin.php?page=useradminsimplifier/useradminsimplifier.php">' . esc_html__( 'Settings', 'useradminsimplifier' ) . '</a>';
@@ -122,6 +133,9 @@ License: GPLv2 or later
 		return $links;
 	}
 
+	/**
+	 * Add the User Admin Simplifier menu item.
+	 */
 	function uas_add_admin_menu() {
 		add_management_page( 	esc_html__( 'User Admin Simplifier', 'useradminsimplifier' ),
 								esc_html__( 'User Admin Simplifier', 'useradminsimplifier' ),
@@ -130,20 +144,38 @@ License: GPLv2 or later
 								'useradminsimplifier_options_page' );
 	}
 
+	/**
+	 * Retrieve the stored options.
+	 */
 	function uas_get_admin_options() {
 		$saved_options = get_option( 'useradminsimplifier_options' );
 		return is_array( $saved_options ) ? $saved_options : array();
 	}
 
+	/**
+	 * Store the passed options.
+	 *
+	 * @param  array $uas_options The selected user options.
+	 */
 	function uas_save_admin_options( $uas_options ) {
 		update_option( 'useradminsimplifier_options', $uas_options );
 	}
 
+	/**
+	 * Helper function to clean menu names.
+	 *
+	 * @param  string $menuname The stored menu name.
+	 *
+	 * @return string           The processed menu name.
+	 */
 	function uas_clean_menu_name( $menuname ) { //clean up menu names provided by WordPress
 		$menuname = preg_replace( '/<span(.*?)span>/', '', $menuname ); //strip the count appended to menus like the post count
 		return ( $menuname );
 	}
 
+	/**
+	 * Display the options page.
+	 */
 	function useradminsimplifier_options_page() {
 		$uas_options = uas_get_admin_options();
 		$uas_selecteduser = isset( $_POST['uas_user_select'] ) ? $_POST['uas_user_select']: '';
