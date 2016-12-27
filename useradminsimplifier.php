@@ -225,7 +225,7 @@ License: GPLv2 or later
 					if ( !( 'wp-menu-separator' == $menuitem[4] ) ) {
 
 						// Process the values for this option.
-						$menuuseroption = uas_process_options( $menusectionsubmitted, $menuitem[5], $nowselected, $uas_options, $uas_selecteduser );
+						$menuuseroption = uas_process_option( $menusectionsubmitted, $menuitem[5], $nowselected, $uas_options, $uas_selecteduser );
 
 						echo 	'<p class='. ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) . '>' .
 								'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' . 'value="'. sanitize_key( $menuitem[5] )  .'" ' . ( 1 == $menuuseroption ? 'checked="checked"' : '' ) . ' /> ' .
@@ -237,7 +237,7 @@ License: GPLv2 or later
 								$subrowcount = 0;
 								foreach ( $storedsubmenu[ $topmenu] as $subsub ) {
 									$combinedname = sanitize_key( $menuitem[5] . $subsub[2] );
-									$submenuuseroption = uas_process_options( $menusectionsubmitted, $combinedname, $nowselected, $uas_options, $uas_selecteduser );
+									$submenuuseroption = uas_process_option( $menusectionsubmitted, $combinedname, $nowselected, $uas_options, $uas_selecteduser );
 
 									echo( '<p class='. ( ( 0 == $subrowcount++ %2 ) ? '"submain"' : '"subalternate"' ) . '>' .
 										'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' .
@@ -250,6 +250,8 @@ License: GPLv2 or later
 					}
 				}
 	$subrowcount = 0;
+	$disable_admin_bar = uas_process_option( $menusectionsubmitted, 'disable-admin-bar', $nowselected, $uas_options, $uas_selecteduser );
+
 ?>
 	<hr />
 		<h3>
@@ -257,7 +259,7 @@ License: GPLv2 or later
 		</h3>
 		<p class="<?php echo ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) ?>">
 			<input type="checkbox" name="menuselection[]" id="menuselection[]" value="disable-admin-bar" <?php
-			checked( 1, $uas_options[ $current_user->user_nicename ][ 'disable-admin-bar' ], true ); ?> />
+			checked( 1, $disable_admin_bar, true ); ?> />
 		<?php
 			esc_html_e( 'Completely disable the admin bar for this user.', 'user_admin_simplifier' );
 		?>
@@ -289,7 +291,7 @@ License: GPLv2 or later
 		) {
 
 			// Process the values for this option.
-			$menuuseroption = uas_process_options( $menusectionsubmitted, $menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
+			$menuuseroption = uas_process_option( $menusectionsubmitted, $menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
 			error_log($menu_bar_item->id);
 			$title = isset( $title_map[ $menu_bar_item->id ] ) ?
 						$title_map[ $menu_bar_item->id ] :
@@ -326,7 +328,7 @@ License: GPLv2 or later
 					}
 
 					// Process the values for this option.
-					$menuuseroption = uas_process_options( $menusectionsubmitted, $sub_menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
+					$menuuseroption = uas_process_option( $menusectionsubmitted, $sub_menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
 
 					$title = isset( $subtitle_map[ $sub_menu_bar_item->id ] ) ?
 								$subtitle_map[ $sub_menu_bar_item->id ] :
@@ -345,9 +347,8 @@ License: GPLv2 or later
 	}
 	?>
 
-	<input name="uas_save" type="submit" id="uas_save" class="button button-primary" value="<?php esc_attr_e( 'Save Changes', 'user_admin_simplifier' ); ?>" /> <br />
-	<?php esc_html_e( 'or', 'user_admin_simplifier' ); ?>: <br />
-	<input name="uas_reset" type="submit" id="uas_reset" class="button" value="<?php esc_attr_e( 'Clear User Settings', 'user_admin_simplifier' ); ?>" />
+	<input name="uas_save" type="submit" id="uas_save" class="button button-primary" value="<?php esc_attr_e( 'Save Changes', 'user_admin_simplifier' ); ?>" />
+
 	</div>
 	<?php
 			}
@@ -389,7 +390,7 @@ License: GPLv2 or later
 /**
  * Process options.
  */
-function uas_process_options( $menusectionsubmitted, $id, $nowselected, &$uas_options, $uas_selecteduser ) {
+function uas_process_option( $menusectionsubmitted, $id, $nowselected, &$uas_options, $uas_selecteduser ) {
 	if ( $menusectionsubmitted ) {
 		if ( isset( $nowselected[ $uas_selecteduser ][ sanitize_key( $id )  ] ) ) { //any selected options for this user/menu
 			$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $id ) ] = $nowselected[ $uas_selecteduser ][ sanitize_key( $id )  ] ;
