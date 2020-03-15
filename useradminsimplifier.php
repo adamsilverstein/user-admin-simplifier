@@ -3,10 +3,10 @@
 Plugin Name: User Admin Simplifier
 Plugin URI: http://www.earthbound.com/plugins/user-admin-simplifier
 Description: Lets any Administrator simplify the WordPress Admin interface, on a per-user basis, by turning specific menu/submenu sections off.
-Version: 0.7.1
+Version: 1.0.0
 Author: Adam Silverstein
 Author URI: http://www.earthbound.com/plugins
-License: GPLv2 or later
+License: MIT
 */
 
 	add_action( 'init', 'uas_init' );
