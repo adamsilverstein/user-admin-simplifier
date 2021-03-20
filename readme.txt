@@ -3,7 +3,7 @@ Contributors: adamsilverstein
 Donate link:
 Tags: admin simplify menus submenus
 Requires at least: 3.0.1
-Tested up to: 5.4
+Tested up to: 5.7
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
