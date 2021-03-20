@@ -36,9 +36,6 @@ Yes! In a multisite install, User Admin Simplifier works as follows:
 
 == Upgrade Notice ==
 
-= 1.0.1 =
-Mark as compatible with WordPress 5.7.
-
 = 0.7.1 =
 Enabled editing the admin bar menus and submenus.
 Enables hiding the admin bar entirely.
@@ -62,6 +59,9 @@ Make css class for +/- more specific to avoid conflicts.
 2. Check the menu section to disable. Click 'Save Changes' to apply your settings. Click 'Clear User Settings' to reset the disabled menus for the selected user.
 
 == Changelog ==
+
+= 1.0.1 =
+Mark as compatible with WordPress 5.7.
 
 = 0.7.1 =
 Enabled editing the admin bar menus and submenus.
