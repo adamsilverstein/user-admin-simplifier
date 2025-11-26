@@ -3,7 +3,7 @@
 Plugin Name: User Admin Simplifier
 Plugin URI: http://www.earthbound.com/plugins/user-admin-simplifier
 Description: Lets any Administrator simplify the WordPress Admin interface, on a per-user basis, by turning specific menu/submenu sections off.
-Version: 1.0.1
+Version: 2.0.0
 Author: Adam Silverstein
 Author URI: http://www.earthbound.com/plugins
 License: MIT
@@ -16,13 +16,14 @@ License: MIT
 	function uas_init() {
 		global $current_user;
 
-		wp_enqueue_script( 'jquery' );
 		add_action( 'admin_menu', 'uas_add_admin_menu', 99 );
 		add_action( 'admin_head', 'uas_edit_admin_menus', 100 );
-		add_action( 'admin_head', 'uas_admin_js' );
-		add_action( 'admin_head', 'uas_admin_css' );
 		add_filter( 'plugin_action_links', 'uas_plugin_action_links', 10, 2 );
 		add_action( 'admin_bar_menu', 'uas_edit_admin_bar_menu', 999 );
+
+		// Register AJAX actions for React UI
+		add_action( 'wp_ajax_uas_save_options', 'uas_ajax_save_options' );
+		add_action( 'wp_ajax_uas_reset_user', 'uas_ajax_reset_user' );
 
 		// Remove the admin bar?
 		$uas_options = uas_get_admin_options();
@@ -38,6 +39,62 @@ License: MIT
 			add_filter( 'show_admin_bar', '__return_false' );
 
 		}
+	}
+
+	/**
+	 * AJAX handler for saving options.
+	 */
+	function uas_ajax_save_options() {
+		// Verify nonce
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'uas_nonce' ) ) {
+			wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
+		}
+
+		// Check user capabilities
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$user = isset( $_POST['user'] ) ? sanitize_text_field( wp_unslash( $_POST['user'] ) ) : '';
+		$options_json = isset( $_POST['options'] ) ? sanitize_text_field( wp_unslash( $_POST['options'] ) ) : '{}';
+		$options = json_decode( $options_json, true );
+
+		if ( empty( $user ) ) {
+			wp_send_json_error( array( 'message' => 'No user specified' ) );
+		}
+
+		$uas_options = uas_get_admin_options();
+		$uas_options[ $user ] = is_array( $options ) ? array_map( 'intval', $options ) : array();
+		uas_save_admin_options( $uas_options );
+
+		wp_send_json_success( array( 'message' => 'Options saved successfully' ) );
+	}
+
+	/**
+	 * AJAX handler for resetting user options.
+	 */
+	function uas_ajax_reset_user() {
+		// Verify nonce
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'uas_nonce' ) ) {
+			wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
+		}
+
+		// Check user capabilities
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$user = isset( $_POST['user'] ) ? sanitize_text_field( wp_unslash( $_POST['user'] ) ) : '';
+
+		if ( empty( $user ) ) {
+			wp_send_json_error( array( 'message' => 'No user specified' ) );
+		}
+
+		$uas_options = uas_get_admin_options();
+		unset( $uas_options[ $user ] );
+		uas_save_admin_options( $uas_options );
+
+		wp_send_json_success( array( 'message' => 'User settings reset successfully' ) );
 	}
 
 	/**
@@ -122,7 +179,7 @@ License: MIT
 	}
 
 	/**
-	 * Add a settings link to the pluginsd page.
+	 * Add a settings link to the plugins page.
 	 */
 	function uas_plugin_action_links( $links, $file ) {
 		if ( $file == plugin_basename( __FILE__ ) ) {
@@ -174,362 +231,236 @@ License: MIT
 	}
 
 	/**
-	 * Display the options page.
+	 * Display the options page with React UI.
 	 */
 	function useradminsimplifier_options_page() {
-		$uas_options = uas_get_admin_options();
-		$uas_selecteduser = isset( $_POST['uas_user_select'] ) ? $_POST['uas_user_select']: '';
 		global $menu;
 		global $submenu;
-		global $current_user;
 		global $storedmenu;
+		global $storedsubmenu;
 		global $wp_admin_bar_menu_items;
 
-		if ( !isset( $storedmenu ) ) {
+		if ( ! isset( $storedmenu ) ) {
 			$storedmenu = $menu;
 		}
-		global $storedsubmenu;
-		if ( !isset( $storedsubmenu ) ) {
+		if ( ! isset( $storedsubmenu ) ) {
 			$storedsubmenu = $submenu;
 		}
 
-		$nowselected = array (); //store selections to apply later in display loop where every menu option is iterated
-		$menusectionsubmitted = false;
-		if ( isset( $uas_options['selecteduser'] ) && $uas_options['selecteduser'] != $uas_selecteduser ) {
-			//user was changed
-			$uas_options['selecteduser'] = $uas_selecteduser;
-		} else {
-			$uas_options['selecteduser'] = $uas_selecteduser;
-			// process submitted menu selections
-			if ( isset ( $_POST['uas_reset'] ) ) {
-				//reset options for this user by clearing all their options
-				unset ( $uas_options[ $uas_selecteduser ] );
-			} else {
-				if ( isset ( $_POST['menuselection'] ) && is_array( $_POST['menuselection'] ) ) {
-					$menusectionsubmitted = true;
-					foreach ( $_POST['menuselection'] as $key => $value ) {
-						$nowselected[ $uas_selecteduser ][ $value ] = 1; //disable this menu for this user
-					}
-				}
-			}
+		// Prepare users data
+		$blogusers = get_users( 'orderby=nicename' );
+		$users_data = array();
+		foreach ( $blogusers as $user ) {
+			$users_data[] = array(
+				'nicename' => $user->user_nicename,
+			);
 		}
 
-?>
-<div class="wrap">
-	<h2>
-		<?php esc_html_e( 'User Admin Simplifier', 'user_admin_simplifier' ); ?>
-	</h2>
-	<form action="" method="post" id="uas_options_form" class="uas_options_form">
-		<div class="uas_container" id="chooseauser">
-			<h3>
-				<?php esc_html_e( 'Choose a user', 'user_admin_simplifier' ); ?>:
-			</h3>
-			<select id="uas_user_select" name="uas_user_select" >
-				<option><?php esc_html_e( 'Choose...', 'user_admin_simplifier' ); ?></option>
-<?php
-			$blogusers = get_users( 'orderby=nicename' );
-			foreach ( $blogusers as $user ) {
-				echo ( '<option value="'. $user->user_nicename . '" ' );
-				echo ( ( $user->user_nicename == $uas_selecteduser ) ? 'selected' : '' );
-				echo ( '>' . $user->user_nicename .  '</option>' );
-			}
-?>
-			</select>
-			</div>
-<?php
-	if( isset( $_POST['uas_user_select'] ) ) {
-?>
-	<div class="uas_container" id="choosemenus">
-		<h3>
-			<?php esc_html_e( 'Disable menus/submenus', 'user_admin_simplifier' ); ?>:
-		</h3>
-		<input class="uas_dummy" style="display:none;" type="checkbox" checked="checked" value="uas_dummy" id="menuselection[]" name="menuselection[]">
-<?php
-				//lets start with top level menus stored in global $menu
-				//will add submenu support if needed later
-				$rowcount = 0;
+		// Prepare menu items data
+		$menu_items = uas_prepare_menu_items( $storedmenu, $storedsubmenu );
 
-				// Iterate thru each menu item.
-				foreach( $storedmenu as $menuitem ) {
-					$menuuseroption = 0;
+		// Prepare admin bar items data
+		$admin_bar_items = uas_prepare_admin_bar_items( $wp_admin_bar_menu_items );
 
-					// Don't process menu separators.
-					if ( !( 'wp-menu-separator' == $menuitem[4] ) ) {
+		// Get saved options
+		$uas_options = uas_get_admin_options();
 
-						// Process the values for this option.
-						$menuuseroption = uas_process_option( $menusectionsubmitted, $menuitem[5], $nowselected, $uas_options, $uas_selecteduser );
+		// Prepare localized strings
+		$strings = array(
+			'title'                => esc_html__( 'User Admin Simplifier', 'useradminsimplifier' ),
+			'chooseUser'           => esc_html__( 'Choose a user', 'useradminsimplifier' ),
+			'choose'               => esc_html__( 'Choose...', 'useradminsimplifier' ),
+			'disableMenus'         => esc_html__( 'Disable menus/submenus', 'useradminsimplifier' ),
+			'disableAdminBar'      => esc_html__( 'Disable the admin bar', 'useradminsimplifier' ),
+			'disableAdminBarLabel' => esc_html__( 'Completely disable the admin bar for this user.', 'useradminsimplifier' ),
+			'disableAdminBarMenus' => esc_html__( 'Disable admin bar menus/submenus', 'useradminsimplifier' ),
+			'showSubmenus'         => esc_html__( 'Show submenus', 'useradminsimplifier' ),
+			'hideSubmenus'         => esc_html__( 'Hide submenus', 'useradminsimplifier' ),
+			'saveChanges'          => esc_html__( 'Save Changes', 'useradminsimplifier' ),
+			'resetUser'            => esc_html__( 'Reset User Settings', 'useradminsimplifier' ),
+			'saving'               => esc_html__( 'Saving...', 'useradminsimplifier' ),
+			'saveSuccess'          => esc_html__( 'Settings saved successfully!', 'useradminsimplifier' ),
+			'saveError'            => esc_html__( 'Failed to save settings.', 'useradminsimplifier' ),
+			'resetSuccess'         => esc_html__( 'User settings reset successfully!', 'useradminsimplifier' ),
+			'resetError'           => esc_html__( 'Failed to reset settings.', 'useradminsimplifier' ),
+		);
 
-						echo 	'<p class='. ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) . '>' .
-								'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' . 'value="'. sanitize_key( $menuitem[5] )  .'" ' . ( 1 == $menuuseroption ? 'checked="checked"' : '' ) . ' /> ' .
-								uas_clean_menu_name( $menuitem[0] ) . "</p>";
-						if ( !( strpos( $menuitem[0], 'pending-count' ) ) ) { //top level menu items with pending count span don't have submenus
-							$topmenu = $menuitem[2];
-							if ( isset( $storedsubmenu[ $topmenu] ) ) { //display submenus
-								echo ( '<div class="submenu uas-unselected"><a href="javascript:;">'. esc_html__( 'Show submenus', 'user_admin_simplifier' ) . '</a></div><div class="submenuinner">' );
-								$subrowcount = 0;
-								foreach ( $storedsubmenu[ $topmenu] as $subsub ) {
-									$combinedname = sanitize_key( $menuitem[5] . $subsub[2] );
-									$submenuuseroption = uas_process_option( $menusectionsubmitted, $combinedname, $nowselected, $uas_options, $uas_selecteduser );
+		// Enqueue React app
+		$plugin_url = plugin_dir_url( __FILE__ );
+		$plugin_path = plugin_dir_path( __FILE__ );
 
-									echo( '<p class='. ( ( 0 == $subrowcount++ %2 ) ? '"submain"' : '"subalternate"' ) . '>' .
-										'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' .
-										'value="'. $combinedname . '" ' . ( 1 == $submenuuseroption ? 'checked="checked"' : '' ) .
-										' /> ' . uas_clean_menu_name( $subsub[0] ) . '</p>' );
-								}
-								echo ( '</div>' );
-							}
-						}
-					}
-				}
-	$subrowcount = 0;
-	$disable_admin_bar = uas_process_option( $menusectionsubmitted, 'disable-admin-bar', $nowselected, $uas_options, $uas_selecteduser );
+		// Check if build files exist
+		$js_file = $plugin_path . 'build/admin.js';
+		$css_file = $plugin_path . 'build/admin.css';
 
-?>
-	<hr />
-		<h3>
-			<?php esc_html_e( 'Disable the admin bar', 'user_admin_simplifier' ); ?>:
-		</h3>
-		<p class="<?php echo ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) ?>">
-			<input type="checkbox" name="menuselection[]" id="menuselection[]" value="disable-admin-bar" <?php
-			checked( 1, $disable_admin_bar, true ); ?> />
-		<?php
-			esc_html_e( 'Completely disable the admin bar for this user.', 'user_admin_simplifier' );
-		?>
-		</p>		<h3>
-			<?php esc_html_e( 'Disable admin bar menus/submenus', 'user_admin_simplifier' ); ?>:
-		</h3>
-	<?php
-	$title_map = array(
-		'wp-logo' => '(W)ordPress',
-		'site-name' => 'Site',
-		'updates' => 'Updates',
-		'comments' => 'Comments',
-		'new-content' => '+ New',
-		'my-account' => 'User Menu',
-	);
-
-
-	// Move user-actions to the end of the list.
-	$wp_admin_bar_menu_items[] = array_shift( $wp_admin_bar_menu_items );
-
-	// Add some common front end actions.
-	$add_for_front = array(
-		'customize' => (object) array(
-			'id' => 'customize',
-			'title' => 'Customize',
-			'parent' => false,
-		),
-		'edit' => (object) array(
-			'id' => 'edit',
-			'title' => 'Edit Page',
-			'parent' => false,
-		)
-	);
-
-	$wp_admin_bar_menu_items = array_merge( $wp_admin_bar_menu_items, $add_for_front );
-
-	//var_dump($wp_admin_bar_menu_items);die;
-	// Iterate thru each adminbar item.
-	foreach( $wp_admin_bar_menu_items as $menu_bar_item ) {
-		if (
-			$menu_bar_item->title &&         /* exclude false */
-			'' !==  $menu_bar_item->title && /* exclude blank */
-			! $menu_bar_item->parent &&      /* exclude children */
-			'Menu' !== wp_strip_all_tags( $menu_bar_item->title ) ||
-			'user-actions' === $menu_bar_item->id
-		) {
-
-			// Process the values for this option.
-			$menuuseroption = uas_process_option( $menusectionsubmitted, $menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
-			$title = isset( $title_map[ $menu_bar_item->id ] ) ?
-						$title_map[ $menu_bar_item->id ] :
-						$menu_bar_item->title;
-	?>
-			<p class="<?php echo ( ( 0 == $rowcount++ %2 ) ? '"menumain"' : '"menualternate"' ) ?>">
-				<input type="checkbox" name="menuselection[]" id="menuselection[]" value="<?php echo sanitize_key( $menu_bar_item->id ) ?>" <?php
-
-
-				checked( 1, $menuuseroption, true ); ?> />
-			<?php
-				echo wp_strip_all_tags( $title );
-			?>
-			</p>
-
-	<?php
-			$wrapped = false;
-
-			$subtitle_map = array(
+		if ( file_exists( $js_file ) ) {
+			wp_enqueue_script(
+				'uas-admin-react',
+				$plugin_url . 'build/admin.js',
+				array(),
+				filemtime( $js_file ),
+				true
 			);
 
-			// Add all the children of this menu item.
-			foreach( $wp_admin_bar_menu_items as $sub_menu_bar_item ) {
-				if (
-					0 === strpos( $sub_menu_bar_item->parent, $menu_bar_item->id ) &&
-					$sub_menu_bar_item->title &&
-					'' !== wp_strip_all_tags( $sub_menu_bar_item->title )
-				) {
+			// Pass data to React app
+			wp_localize_script( 'uas-admin-react', 'uasData', array(
+				'users'         => $users_data,
+				'menuItems'     => $menu_items,
+				'adminBarItems' => $admin_bar_items,
+				'options'       => $uas_options,
+				'nonce'         => wp_create_nonce( 'uas_nonce' ),
+				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
+				'strings'       => $strings,
+				'imagesUrl'     => $plugin_url . 'images/',
+			) );
+		}
 
-					// Only add the wrapper once.
-					if ( ! $wrapped ) {
-						echo ( '<div class="submenu uas-unselected"><a href="javascript:;">'. esc_html__( 'Show submenus', 'user_admin_simplifier' ) . '</a></div><div class="submenuinner">' );
-						$wrapped = true;
+		if ( file_exists( $css_file ) ) {
+			wp_enqueue_style(
+				'uas-admin-react-css',
+				$plugin_url . 'build/admin.css',
+				array(),
+				filemtime( $css_file )
+			);
+		}
+
+		// Render the React root container
+		echo '<div id="uas-react-root"></div>';
+	}
+
+	/**
+	 * Prepare menu items for React.
+	 *
+	 * @param array $stored_menu The WordPress menu array.
+	 * @param array $stored_submenu The WordPress submenu array.
+	 * @return array Formatted menu items for React.
+	 */
+	function uas_prepare_menu_items( $stored_menu, $stored_submenu ) {
+		$menu_items = array();
+
+		if ( ! is_array( $stored_menu ) ) {
+			return $menu_items;
+		}
+
+		foreach ( $stored_menu as $menuitem ) {
+			// Don't process menu separators
+			if ( isset( $menuitem[4] ) && 'wp-menu-separator' === $menuitem[4] ) {
+				continue;
+			}
+
+			if ( ! isset( $menuitem[5] ) || ! isset( $menuitem[0] ) ) {
+				continue;
+			}
+
+			$item = array(
+				'id'       => sanitize_key( $menuitem[5] ),
+				'name'     => uas_clean_menu_name( $menuitem[0] ),
+				'submenus' => array(),
+			);
+
+			// Add submenus if available
+			$topmenu = isset( $menuitem[2] ) ? $menuitem[2] : '';
+			if ( ! empty( $topmenu ) && isset( $stored_submenu[ $topmenu ] ) ) {
+				foreach ( $stored_submenu[ $topmenu ] as $subsub ) {
+					if ( isset( $subsub[0] ) && isset( $subsub[2] ) ) {
+						$item['submenus'][] = array(
+							'id'   => sanitize_key( $menuitem[5] . $subsub[2] ),
+							'name' => uas_clean_menu_name( $subsub[0] ),
+						);
 					}
-
-					// Process the values for this option.
-					$menuuseroption = uas_process_option( $menusectionsubmitted, $sub_menu_bar_item->id, $nowselected, $uas_options, $uas_selecteduser );
-
-					$title = isset( $subtitle_map[ $sub_menu_bar_item->id ] ) ?
-								$subtitle_map[ $sub_menu_bar_item->id ] :
-								$sub_menu_bar_item->title;
-					echo( '<p class='. ( ( 0 == $subrowcount++ %2 ) ? '"submain"' : '"subalternate"' ) . '>' .
-						'<input type="checkbox" name="menuselection[]" id="menuselection[]" ' .
-						'value="'. $sub_menu_bar_item->id . '" '.
-						checked( 1, $menuuseroption, false ) .
-						' /> ' . wp_strip_all_tags( $title ) . '</p>' );
 				}
 			}
-			if ( $wrapped ) {
-				echo '</div>';
+
+			$menu_items[] = $item;
+		}
+
+		return $menu_items;
+	}
+
+	/**
+	 * Prepare admin bar items for React.
+	 *
+	 * @param array $wp_admin_bar_menu_items The admin bar menu items.
+	 * @return array Formatted admin bar items for React.
+	 */
+	function uas_prepare_admin_bar_items( $wp_admin_bar_menu_items ) {
+		$admin_bar_items = array();
+
+		if ( ! is_array( $wp_admin_bar_menu_items ) ) {
+			return $admin_bar_items;
+		}
+
+		$title_map = array(
+			'wp-logo'     => '(W)ordPress',
+			'site-name'   => 'Site',
+			'updates'     => 'Updates',
+			'comments'    => 'Comments',
+			'new-content' => '+ New',
+			'my-account'  => 'User Menu',
+		);
+
+		// Add some common front end actions
+		$add_for_front = array(
+			'customize' => (object) array(
+				'id'     => 'customize',
+				'title'  => 'Customize',
+				'parent' => false,
+			),
+			'edit' => (object) array(
+				'id'     => 'edit',
+				'title'  => 'Edit Page',
+				'parent' => false,
+			),
+		);
+
+		$wp_admin_bar_menu_items = array_merge( (array) $wp_admin_bar_menu_items, $add_for_front );
+
+		// First pass: collect top-level items
+		foreach ( $wp_admin_bar_menu_items as $menu_bar_item ) {
+			if ( ! is_object( $menu_bar_item ) ) {
+				continue;
+			}
+
+			if (
+				( isset( $menu_bar_item->title ) && $menu_bar_item->title &&
+				  '' !== $menu_bar_item->title &&
+				  ( ! isset( $menu_bar_item->parent ) || ! $menu_bar_item->parent ) &&
+				  'Menu' !== wp_strip_all_tags( $menu_bar_item->title ) ) ||
+				( isset( $menu_bar_item->id ) && 'user-actions' === $menu_bar_item->id )
+			) {
+				$title = isset( $title_map[ $menu_bar_item->id ] )
+					? $title_map[ $menu_bar_item->id ]
+					: wp_strip_all_tags( $menu_bar_item->title );
+
+				$item = array(
+					'id'       => sanitize_key( $menu_bar_item->id ),
+					'title'    => $title,
+					'children' => array(),
+				);
+
+				// Find children
+				foreach ( $wp_admin_bar_menu_items as $sub_menu_bar_item ) {
+					if ( ! is_object( $sub_menu_bar_item ) ) {
+						continue;
+					}
+
+					if (
+						isset( $sub_menu_bar_item->parent ) &&
+						0 === strpos( $sub_menu_bar_item->parent, $menu_bar_item->id ) &&
+						isset( $sub_menu_bar_item->title ) &&
+						$sub_menu_bar_item->title &&
+						'' !== wp_strip_all_tags( $sub_menu_bar_item->title )
+					) {
+						$item['children'][] = array(
+							'id'    => sanitize_key( $sub_menu_bar_item->id ),
+							'title' => wp_strip_all_tags( $sub_menu_bar_item->title ),
+						);
+					}
+				}
+
+				$admin_bar_items[] = $item;
 			}
 		}
+
+		return $admin_bar_items;
 	}
-	?>
-
-	<input name="uas_save" type="submit" id="uas_save" class="button button-primary" value="<?php esc_attr_e( 'Save Changes', 'user_admin_simplifier' ); ?>" />
-
-	</div>
-	<?php
-			}
-?>
-</form>
-</div>
- <?php
-	uas_save_admin_options( $uas_options );
-	}
-	function uas_admin_js() {
-?>
-<script type="text/javascript">
-	jQuery( function() {
-		jQuery( 'form#uas_options_form #uas_user_select' ).change( function() {
-				jQuery( 'form#uas_options_form' ).submit();
-			} )
-	} );
-	jQuery( document ).ready( function () {
-		jQuery( 'div.submenuinner' ).slideUp( 'fast' ).hide();
-		//TO-DO: makes these submenu openings persist, save state in cookies?
-		jQuery( '.submenu' ).click( function() {
-			inner=jQuery( this ).next( '.submenuinner' );
-			if ( jQuery( inner ).is( ":hidden" ) ) {
-				jQuery( inner ).show().slideDown( 'fast' );
-				jQuery( this ).removeClass( 'uas-unselected' ).addClass( 'uas_selected' );
-				jQuery( this ).children( 'a' ).text( '<?php esc_html_e( 'Hide submenus', 'user_admin_simplifier' )?>' );
-			} else {
-				jQuery( inner ).slideUp( 'fast' ).hide();
-				jQuery( this ).removeClass( 'uas_selected' ).addClass( 'uas-unselected' );
-				jQuery( this ).children( 'a' ).text( '<?php esc_html_e( 'Show submenus', 'user_admin_simplifier' )?>' );
-
-			}
-	} );
-} );
-</script>
-<?php
-}
-
-/**
- * Process options.
- */
-function uas_process_option( $menusectionsubmitted, $id, $nowselected, &$uas_options, $uas_selecteduser ) {
-	if ( $menusectionsubmitted ) {
-		if ( isset( $nowselected[ $uas_selecteduser ][ sanitize_key( $id )  ] ) ) { //any selected options for this user/menu
-			$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $id ) ] = $nowselected[ $uas_selecteduser ][ sanitize_key( $id )  ] ;
-		}
-		else {
-			$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $id ) ] = 0;
-		}
-	}
-	if ( isset( $uas_options[ $uas_selecteduser ][ sanitize_key( $id )  ] ) ) { //any saved options for this user/menu
-		$menuuseroption = $uas_options[ $uas_selecteduser ][ sanitize_key( $id )  ];
-	} else {
-		$menuuseroption = 0;
-		$uas_options[ $uas_selecteduser ][ sanitize_key( $id ) ] = 0;
-	}
-
-	return $menuuseroption;
-
-}
-
-	function uas_admin_css() {
-?>
-<style type="text/css">
-
-	.uas-unselected {
-		background-image:url( <?php echo ( plugins_url( 'images/plus15.png', __FILE__ ) ); ?> );
-	}
-
-	.uas_selected {
-		background-image:url( <?php echo ( plugins_url( 'images/minus15.png', __FILE__ ) ); ?> );
-	}
-
-	.submenu {
-		margin-left:200px;
-		padding-left:20px;
-		font-size:12px;
-		height:22px;
-		width:200px;
-		margin-top:-25px;
-		position:absolute;
-		background-repeat:no-repeat;
-		background-position:left top;
-	}
-
-	.submenuinner {
-		margin-left:50px;
-	}
-
-	.uas_options_form {
-		font-size:14px;
-	}
-
-	.uas_options_form p {
-		margin:0 0;
-		padding:.5em .5em;
-	}
-
-	.uas_options_form input[type="submit"] {
-		font-size:18px;
-		margin-top:10px;
-		margin-bottom:10px;
-	}
-
-	.uas_options_form select {
-		min-width:200px;
-		padding:5px;
-		font-size:16px;
-		height: 34px;
-	}
-
-	#choosemenus {
-		border-width:1px;
-		border-color:#ccc;
-		padding:10px;
-		border-style:solid;
-	}
-
-	.submain {
-		background-color: #F3F3F3;
-	}
-
-	.subalternate {
-		background-color: #ECECEC;
-	}
-
-	.menumain {
-		background-color: #FCFCFC;
-	}
-
-	.menualternate {
-		background-color: #DDDDDD;
-	}
-</style>
-<?php
-}
