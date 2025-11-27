@@ -69,6 +69,15 @@
   background-repeat: no-repeat;
   background-position: left center;
   cursor: pointer;
+  /* Button reset styles for accessibility */
+  background-color: transparent;
+  border: none;
+  color: #0073aa;
+  font-family: inherit;
+}
+
+.submenu-toggle:hover {
+  text-decoration: underline;
 }
 
 .uas-unselected {
@@ -77,14 +86,6 @@
 
 .uas-selected {
   background-image: url('../images/minus15.png');
-}
-
-.submenu-toggle a {
-  text-decoration: none;
-}
-
-.submenu-toggle a:hover {
-  text-decoration: underline;
 }
 
 /* Submenu inner container */

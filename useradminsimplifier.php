@@ -47,27 +47,32 @@ License: MIT
 	function uas_ajax_save_options() {
 		// Verify nonce
 		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'uas_nonce' ) ) {
-			wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid nonce', 'useradminsimplifier' ) ) );
 		}
 
 		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Permission denied', 'useradminsimplifier' ) ) );
 		}
 
 		$user = isset( $_POST['user'] ) ? sanitize_text_field( wp_unslash( $_POST['user'] ) ) : '';
-		$options_json = isset( $_POST['options'] ) ? sanitize_text_field( wp_unslash( $_POST['options'] ) ) : '{}';
+		$options_json = isset( $_POST['options'] ) ? wp_unslash( $_POST['options'] ) : '{}';
 		$options = json_decode( $options_json, true );
 
+		// Validate JSON decode
+		if ( null === $options && JSON_ERROR_NONE !== json_last_error() ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid options payload.', 'useradminsimplifier' ) ) );
+		}
+
 		if ( empty( $user ) ) {
-			wp_send_json_error( array( 'message' => 'No user specified' ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'No user specified', 'useradminsimplifier' ) ) );
 		}
 
 		$uas_options = uas_get_admin_options();
 		$uas_options[ $user ] = is_array( $options ) ? array_map( 'intval', $options ) : array();
 		uas_save_admin_options( $uas_options );
 
-		wp_send_json_success( array( 'message' => 'Options saved successfully' ) );
+		wp_send_json_success( array( 'message' => esc_html__( 'Options saved successfully', 'useradminsimplifier' ) ) );
 	}
 
 	/**
@@ -76,25 +81,25 @@ License: MIT
 	function uas_ajax_reset_user() {
 		// Verify nonce
 		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'uas_nonce' ) ) {
-			wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid nonce', 'useradminsimplifier' ) ) );
 		}
 
 		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Permission denied', 'useradminsimplifier' ) ) );
 		}
 
 		$user = isset( $_POST['user'] ) ? sanitize_text_field( wp_unslash( $_POST['user'] ) ) : '';
 
 		if ( empty( $user ) ) {
-			wp_send_json_error( array( 'message' => 'No user specified' ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'No user specified', 'useradminsimplifier' ) ) );
 		}
 
 		$uas_options = uas_get_admin_options();
 		unset( $uas_options[ $user ] );
 		uas_save_admin_options( $uas_options );
 
-		wp_send_json_success( array( 'message' => 'User settings reset successfully' ) );
+		wp_send_json_success( array( 'message' => esc_html__( 'User settings reset successfully', 'useradminsimplifier' ) ) );
 	}
 
 	/**

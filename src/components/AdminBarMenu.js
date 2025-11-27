@@ -32,16 +32,16 @@ const AdminBarMenuItem = ({ item, userOptions, onToggle, rowIndex, strings }) =>
           {item.title}
         </label>
         {hasChildren && (
-          <span 
+          <button
+            type="button"
             className={`submenu-toggle ${isExpanded ? 'uas-selected' : 'uas-unselected'}`}
             onClick={toggleChildren}
+            aria-expanded={isExpanded}
           >
-            <a href="#" onClick={(e) => e.preventDefault()}>
-              {isExpanded 
-                ? (strings.hideSubmenus || 'Hide submenus') 
-                : (strings.showSubmenus || 'Show submenus')}
-            </a>
-          </span>
+            {isExpanded 
+              ? (strings.hideSubmenus || 'Hide submenus') 
+              : (strings.showSubmenus || 'Show submenus')}
+          </button>
         )}
       </p>
       {hasChildren && isExpanded && (

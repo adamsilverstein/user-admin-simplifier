@@ -27,13 +27,16 @@ const App = () => {
 
   // Update user options when selectedUser changes
   useEffect(() => {
-    if (selectedUser && !userOptions[selectedUser]) {
-      setUserOptions(prev => ({
-        ...prev,
-        [selectedUser]: {}
-      }));
+    if (selectedUser) {
+      setUserOptions(prev => {
+        if (prev[selectedUser]) return prev;
+        return {
+          ...prev,
+          [selectedUser]: {}
+        };
+      });
     }
-  }, [selectedUser, userOptions]);
+  }, [selectedUser]);
 
   /**
    * Handle user selection change
@@ -80,6 +83,10 @@ const App = () => {
         credentials: 'same-origin'
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.success) {
@@ -123,6 +130,10 @@ const App = () => {
         body: formData,
         credentials: 'same-origin'
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
 
       const data = await response.json();
 

@@ -32,16 +32,16 @@ const MenuItem = ({ item, userOptions, onToggle, rowIndex, strings }) => {
           {item.name}
         </label>
         {hasSubmenus && (
-          <span 
+          <button
+            type="button"
             className={`submenu-toggle ${isExpanded ? 'uas-selected' : 'uas-unselected'}`}
             onClick={toggleSubmenu}
+            aria-expanded={isExpanded}
           >
-            <a href="#" onClick={(e) => e.preventDefault()}>
-              {isExpanded 
-                ? (strings.hideSubmenus || 'Hide submenus') 
-                : (strings.showSubmenus || 'Show submenus')}
-            </a>
-          </span>
+            {isExpanded 
+              ? (strings.hideSubmenus || 'Hide submenus') 
+              : (strings.showSubmenus || 'Show submenus')}
+          </button>
         )}
       </p>
       {hasSubmenus && isExpanded && (
