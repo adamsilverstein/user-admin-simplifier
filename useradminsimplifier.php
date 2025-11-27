@@ -231,8 +231,11 @@ License: MIT
 	 * @return string           The processed menu name.
 	 */
 	function uas_clean_menu_name( $menuname ) { //clean up menu names provided by WordPress
-		$menuname = preg_replace( '/<span(.*?)<\/span>/', '', $menuname ); //strip the count appended to menus like the post count
-		return ( $menuname );
+		// Use greedy matching to remove all span tags including nested spans
+		// WordPress menu names can have nested spans like:
+		// "Comments <span class='x'><span class='y'>1</span><span class='z'>text</span></span>"
+		$menuname = preg_replace( '/<span[^>]*>.*<\/span>/s', '', $menuname );
+		return trim( $menuname );
 	}
 
 	/**

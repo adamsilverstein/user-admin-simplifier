@@ -6,7 +6,8 @@
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "test:php": "php tests/test-menu-name-cleaning.php"
   },
   "keywords": [
     "wordpress",
