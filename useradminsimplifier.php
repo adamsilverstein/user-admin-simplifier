@@ -226,7 +226,7 @@ License: MIT
 	 * @return string           The processed menu name.
 	 */
 	function uas_clean_menu_name( $menuname ) { //clean up menu names provided by WordPress
-		$menuname = preg_replace( '/<span(.*?)span>/', '', $menuname ); //strip the count appended to menus like the post count
+		$menuname = preg_replace( '/<span(.*?)<\/span>/', '', $menuname ); //strip the count appended to menus like the post count
 		return ( $menuname );
 	}
 
@@ -283,6 +283,10 @@ License: MIT
 			'saveError'            => esc_html__( 'Failed to save settings.', 'useradminsimplifier' ),
 			'resetSuccess'         => esc_html__( 'User settings reset successfully!', 'useradminsimplifier' ),
 			'resetError'           => esc_html__( 'Failed to reset settings.', 'useradminsimplifier' ),
+			'disableAllMenus'      => esc_html__( 'Disable all menus', 'useradminsimplifier' ),
+			'enableAllMenus'       => esc_html__( 'Enable all menus', 'useradminsimplifier' ),
+			'disableAllAdminBar'   => esc_html__( 'Disable all admin bar items', 'useradminsimplifier' ),
+			'enableAllAdminBar'    => esc_html__( 'Enable all admin bar items', 'useradminsimplifier' ),
 		);
 
 		// Enqueue React app

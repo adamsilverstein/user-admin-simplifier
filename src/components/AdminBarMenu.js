@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 /**
  * AdminBarMenuItem component
@@ -75,8 +75,40 @@ const AdminBarMenuItem = ({ item, userOptions, onToggle, rowIndex, strings }) =>
  * Renders the list of WordPress admin bar menu items
  */
 const AdminBarMenu = ({ adminBarItems, userOptions, onToggle, strings }) => {
+  // Calculate if all admin bar items are disabled
+  const allItemIds = useMemo(() => {
+    const ids = [];
+    adminBarItems.forEach(item => {
+      ids.push(item.id);
+      if (item.children) {
+        item.children.forEach(child => ids.push(child.id));
+      }
+    });
+    return ids;
+  }, [adminBarItems]);
+
+  const allDisabled = useMemo(() => {
+    return allItemIds.length > 0 && allItemIds.every(id => userOptions[id] === 1);
+  }, [allItemIds, userOptions]);
+
+  const handleToggleAll = () => {
+    const newValue = allDisabled ? false : true;
+    allItemIds.forEach(id => onToggle(id, newValue));
+  };
+
   return (
     <div className="admin-bar-menu-list">
+      <div className="toggle-all-container">
+        <button 
+          type="button" 
+          className="button button-secondary toggle-all-btn"
+          onClick={handleToggleAll}
+        >
+          {allDisabled 
+            ? (strings.enableAllAdminBar || 'Enable all admin bar items') 
+            : (strings.disableAllAdminBar || 'Disable all admin bar items')}
+        </button>
+      </div>
       {adminBarItems.map((item, index) => (
         <AdminBarMenuItem 
           key={item.id}

@@ -108,6 +108,16 @@
   cursor: not-allowed;
 }
 
+/* Toggle all button */
+.toggle-all-container {
+  margin-bottom: 10px;
+}
+
+.toggle-all-btn {
+  font-size: 13px;
+  padding: 4px 10px;
+}
+
 /* Messages */
 .uas-message {
   margin: 15px 0;
