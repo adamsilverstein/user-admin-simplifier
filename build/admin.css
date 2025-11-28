@@ -1,0 +1,160 @@
+/**
+ * User Admin Simplifier - React UI Styles
+ * These styles maintain visual parity with the original implementation
+ */
+
+/* Main containers */
+.uas-container {
+  margin-bottom: 20px;
+}
+
+#choosemenus {
+  border-width: 1px;
+  border-color: #ccc;
+  padding: 10px;
+  border-style: solid;
+}
+
+/* User selector */
+#uas_user_select {
+  min-width: 200px;
+  padding: 5px;
+  font-size: 16px;
+  height: 34px;
+}
+
+/* Menu items */
+.menu-list p,
+.admin-bar-menu-list p,
+.menu-item {
+  margin: 0;
+  padding: 0.5em;
+  position: relative;
+}
+
+.menu-list label,
+.admin-bar-menu-list label,
+.menu-item label {
+  cursor: pointer;
+}
+
+.menu-list input[type="checkbox"],
+.admin-bar-menu-list input[type="checkbox"],
+.menu-item input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+/* Row alternating colors */
+.menumain {
+  background-color: #FCFCFC;
+}
+
+.menualternate {
+  background-color: #DDDDDD;
+}
+
+.submain {
+  background-color: #F3F3F3;
+}
+
+.subalternate {
+  background-color: #ECECEC;
+}
+
+/* Submenu toggle */
+.submenu-toggle {
+  margin-left: 20px;
+  padding-left: 20px;
+  font-size: 12px;
+  background-repeat: no-repeat;
+  background-position: left center;
+  cursor: pointer;
+  /* Button reset styles for accessibility */
+  background-color: transparent;
+  border: none;
+  color: #0073aa;
+  font-family: inherit;
+}
+
+.submenu-toggle:hover {
+  text-decoration: underline;
+}
+
+.uas-unselected {
+  background-image: url(1bed9c67f44e5472ce92.png);
+}
+
+.uas-selected {
+  background-image: url(43645ebd000af583dc80.png);
+}
+
+/* Submenu inner container */
+.submenuinner {
+  margin-left: 50px;
+}
+
+/* Buttons */
+.uas-buttons {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.uas-buttons button {
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+.uas-buttons button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Toggle all button */
+.toggle-all-container {
+  margin-bottom: 10px;
+}
+
+.toggle-all-btn {
+  font-size: 13px;
+  padding: 4px 10px;
+}
+
+/* Messages */
+.uas-message {
+  margin: 15px 0;
+  padding: 12px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.uas-message.success {
+  background-color: #dff0d8;
+  border: 1px solid #d6e9c6;
+  color: #3c763d;
+}
+
+.uas-message.error {
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+  color: #a94442;
+}
+
+/* Section headers */
+#choosemenus h3 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+#choosemenus hr {
+  margin: 20px 0;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+  .submenu-toggle {
+    display: block;
+    margin-left: 25px;
+    margin-top: 5px;
+  }
+}
+

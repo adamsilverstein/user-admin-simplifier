@@ -3,8 +3,8 @@ Contributors: adamsilverstein
 Donate link:
 Tags: admin simplify menus submenus
 Requires at least: 3.0.1
-Tested up to: 5.7
-Stable tag: 1.0.1
+Tested up to: 6.9
+Stable tag: 3.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,6 +36,10 @@ Yes! In a multisite install, User Admin Simplifier works as follows:
 
 == Upgrade Notice ==
 
+= 2.0.0 =
+Major update: The admin UI has been completely rewritten using React for improved performance and user experience.
+Settings are now saved via AJAX without page reload. All existing functionality is preserved.
+
 = 0.7.1 =
 Enabled editing the admin bar menus and submenus.
 Enables hiding the admin bar entirely.
@@ -59,6 +63,14 @@ Make css class for +/- more specific to avoid conflicts.
 2. Check the menu section to disable. Click 'Save Changes' to apply your settings. Click 'Clear User Settings' to reset the disabled menus for the selected user.
 
 == Changelog ==
+
+= 2.0.0 =
+* Major UI rewrite using React
+* Settings are now saved via AJAX without page reload
+* Improved user experience with instant feedback on save/reset actions
+* Added success/error messages for user actions
+* All existing functionality preserved
+* Modern build process using Webpack
 
 = 1.0.1 =
 Mark as compatible with WordPress 5.7.
