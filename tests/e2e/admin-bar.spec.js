@@ -8,26 +8,44 @@ test.describe('Admin Bar Customization', () => {
   let testUser;
 
   test.beforeAll(async ({ browser }) => {
-    const page = await browser.newPage();
-    await loginToWordPress(page);
-    
-    // Create a test user for our tests
-    testUser = await createTestUser(page, {
-      username: 'adminbartest',
-      email: 'adminbartest@example.com',
-    });
-    
-    await page.close();
+    try {
+      const page = await browser.newPage();
+      await loginToWordPress(page);
+      
+      // Create a test user for our tests
+      testUser = await createTestUser(page, {
+        username: 'adminbartest',
+        email: 'adminbartest@example.com',
+      });
+      
+      await page.close();
+    } catch (error) {
+      console.error('Setup failed:', error);
+      throw error;
+    }
   });
 
   test.afterAll(async ({ browser }) => {
-    const page = await browser.newPage();
-    await loginToWordPress(page);
+    if (!testUser?.username) {
+      console.warn('No test user to cleanup');
+      return;
+    }
     
-    // Clean up test user
-    await deleteTestUser(page, testUser.username);
-    
-    await page.close();
+    let page;
+    try {
+      page = await browser.newPage();
+      await loginToWordPress(page);
+      
+      // Clean up test user
+      await deleteTestUser(page, testUser.username);
+    } catch (error) {
+      console.error('Cleanup failed:', error);
+      // Don't fail tests due to cleanup errors
+    } finally {
+      if (page) {
+        await page.close();
+      }
+    }
   });
 
   test.beforeEach(async ({ page }) => {

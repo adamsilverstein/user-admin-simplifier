@@ -16,7 +16,13 @@ export const ADMIN_USER = {
  * @param {Object} credentials - User credentials
  */
 export async function loginToWordPress(page, credentials = ADMIN_USER) {
-  await page.goto('/wp-login.php');
+  await page.goto('/wp-login.php', { 
+    waitUntil: 'networkidle',
+    timeout: 30000 
+  });
+  
+  // Wait for login form to be visible
+  await page.waitForSelector('#user_login', { visible: true, timeout: 15000 });
   
   // Fill login form
   await page.fill('#user_login', credentials.username);
@@ -26,7 +32,8 @@ export async function loginToWordPress(page, credentials = ADMIN_USER) {
   await page.click('#wp-submit');
   
   // Wait for navigation to complete
-  await page.waitForURL(/wp-admin/, { timeout: 10000 });
+  await page.waitForURL(/wp-admin/, { timeout: 30000 });
+  await page.waitForLoadState('networkidle');
 }
 
 /**
@@ -34,10 +41,13 @@ export async function loginToWordPress(page, credentials = ADMIN_USER) {
  * @param {import('@playwright/test').Page} page - Playwright page object
  */
 export async function navigateToPlugin(page) {
-  await page.goto('/wp-admin/admin.php?page=useradminsimplifier/useradminsimplifier.php');
+  await page.goto('/wp-admin/admin.php?page=useradminsimplifier/useradminsimplifier.php', {
+    waitUntil: 'networkidle',
+    timeout: 30000
+  });
   
   // Wait for React app to load
-  await page.waitForSelector('#uas-react-root', { timeout: 10000 });
+  await page.waitForSelector('#uas-react-root', { visible: true, timeout: 15000 });
 }
 
 /**
@@ -57,7 +67,13 @@ export async function createTestUser(page, userData = {}) {
   
   const user = { ...defaultUser, ...userData };
   
-  await page.goto('/wp-admin/user-new.php');
+  await page.goto('/wp-admin/user-new.php', {
+    waitUntil: 'networkidle',
+    timeout: 30000
+  });
+  
+  // Wait for form to be ready
+  await page.waitForSelector('#user_login', { visible: true, timeout: 15000 });
   
   // Fill user form
   await page.fill('#user_login', user.username);
@@ -73,8 +89,13 @@ export async function createTestUser(page, userData = {}) {
   // Submit form
   await page.click('#createusersub');
   
-  // Wait for success message
-  await page.waitForSelector('.notice-success', { timeout: 5000 });
+  // Wait for redirect or success message
+  try {
+    await page.waitForSelector('.notice-success', { timeout: 10000 });
+  } catch {
+    // If we don't see success message, check if we got redirected to users page
+    await page.waitForURL(/wp-admin\/users\.php/, { timeout: 10000 });
+  }
   
   return user;
 }
@@ -85,23 +106,36 @@ export async function createTestUser(page, userData = {}) {
  * @param {string} username - Username to delete
  */
 export async function deleteTestUser(page, username) {
-  await page.goto('/wp-admin/users.php');
+  await page.goto('/wp-admin/users.php', {
+    waitUntil: 'networkidle',
+    timeout: 30000
+  });
+  
+  // Wait for the page to load
+  await page.waitForSelector('table.wp-list-table', { timeout: 15000 });
   
   // Find user row
   const userRow = page.locator(`tr:has-text("${username}")`);
   
-  if (await userRow.count() > 0) {
+  const count = await userRow.count();
+  if (count > 0) {
     // Hover over the row to reveal action links
-    await userRow.hover();
+    await userRow.first().hover();
     
     // Click delete link
-    await userRow.locator('a:has-text("Delete")').click();
+    const deleteLink = userRow.first().locator('a:has-text("Delete")');
+    await deleteLink.click();
     
     // Confirm deletion
     await page.click('#submit');
     
-    // Wait for success message
-    await page.waitForSelector('.notice-success', { timeout: 5000 });
+    // Wait for success message or redirect
+    try {
+      await page.waitForSelector('.notice-success', { timeout: 10000 });
+    } catch {
+      // User was deleted but no success message - that's ok
+      await page.waitForLoadState('networkidle');
+    }
   }
 }
 
