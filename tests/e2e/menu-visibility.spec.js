@@ -57,15 +57,15 @@ test.describe('Menu Visibility', () => {
     await loginToWordPress(page);
     await navigateToPlugin(page);
     
-    // Wait for React to render
-    await page.waitForTimeout(1000);
+    // Wait for user selector
+    const userSelector = page.locator('select').first();
+    await expect(userSelector).toBeVisible();
     
     // Select test user
-    const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for menu list to load
-    await page.waitForTimeout(500);
+    // Wait for checkboxes to load
+    await expect(page.locator('input[type="checkbox"]').first()).toBeVisible({ timeout: 5000 });
     
     // Find a menu item to hide (e.g., Posts, Media, etc.)
     // We'll try to find a checkbox with a label containing common menu names
@@ -96,10 +96,11 @@ test.describe('Menu Visibility', () => {
     // If we found and checked a menu, save it
     if (menuToHide) {
       const saveButton = page.locator('button:has-text("Save")');
+      await expect(saveButton).toBeVisible();
       await saveButton.click();
       
       // Wait for save to complete
-      await page.waitForTimeout(1500);
+      await page.waitForLoadState('networkidle');
       
       // Logout admin
       await page.goto('/wp-login.php?action=logout');
@@ -128,22 +129,22 @@ test.describe('Menu Visibility', () => {
     await loginToWordPress(page);
     await navigateToPlugin(page);
     
-    // Wait for React to render
-    await page.waitForTimeout(1000);
+    // Wait for user selector
+    const userSelector = page.locator('select').first();
+    await expect(userSelector).toBeVisible();
     
     // Select test user
-    const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for menu list to load
-    await page.waitForTimeout(500);
+    // Wait for reset button to be available
+    const resetButton = page.locator('button:has-text("Reset")');
+    await expect(resetButton).toBeVisible({ timeout: 5000 });
     
     // Click reset button
-    const resetButton = page.locator('button:has-text("Reset")');
     await resetButton.click();
     
     // Wait for reset to complete
-    await page.waitForTimeout(1500);
+    await page.waitForLoadState('networkidle');
     
     // Logout admin
     await page.goto('/wp-login.php?action=logout');

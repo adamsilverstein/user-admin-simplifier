@@ -20,8 +20,8 @@ test.describe('[Feature Name]', () => {
     // Navigate to the plugin page
     await navigateToPlugin(page);
     
-    // Wait for React to render (adjust timeout as needed)
-    await page.waitForTimeout(1000);
+    // Wait for user selector to be visible (better than arbitrary timeout)
+    await expect(page.locator('select').first()).toBeVisible();
   });
 
   // Example test case

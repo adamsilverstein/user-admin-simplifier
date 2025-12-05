@@ -16,7 +16,8 @@ exports.test = base.extend({
   pluginPage: async ({ page }, use) => {
     await loginToWordPress(page);
     await navigateToPlugin(page);
-    await page.waitForTimeout(1000); // Wait for React to render
+    // Wait for React to render - use explicit element check instead of timeout
+    await page.waitForSelector('select, [role="combobox"]', { timeout: 5000 });
     await use(page);
   },
 });

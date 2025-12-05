@@ -34,8 +34,8 @@ test.describe('Menu Management', () => {
     await loginToWordPress(page);
     await navigateToPlugin(page);
     
-    // Wait for React to render
-    await page.waitForTimeout(1000);
+    // Wait for user selector to be available
+    await expect(page.locator('select').first()).toBeVisible();
   });
 
   test('should be able to check/uncheck menu items', async ({ page }) => {
@@ -43,8 +43,8 @@ test.describe('Menu Management', () => {
     const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for menu list to load
-    await page.waitForTimeout(500);
+    // Wait for checkboxes to load
+    await expect(page.locator('input[type="checkbox"]').first()).toBeVisible({ timeout: 5000 });
     
     // Find first checkbox
     const firstCheckbox = page.locator('input[type="checkbox"]').first();
@@ -65,11 +65,11 @@ test.describe('Menu Management', () => {
     const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for menu list to load
-    await page.waitForTimeout(500);
+    // Wait for checkboxes to load
+    const checkboxes = page.locator('input[type="checkbox"]');
+    await expect(checkboxes.first()).toBeVisible({ timeout: 5000 });
     
     // Find and check a specific checkbox
-    const checkboxes = page.locator('input[type="checkbox"]');
     const targetCheckbox = checkboxes.nth(2); // Select third checkbox
     
     // Ensure it's checked
@@ -79,18 +79,19 @@ test.describe('Menu Management', () => {
     
     // Save settings
     const saveButton = page.locator('button:has-text("Save")');
+    await expect(saveButton).toBeVisible();
     await saveButton.click();
     
-    // Wait for save to complete (look for success message)
-    await page.waitForTimeout(1000);
+    // Wait for page to update (check for success or wait for network idle)
+    await page.waitForLoadState('networkidle');
     
     // Reload the page
     await page.reload();
-    await page.waitForTimeout(1000);
+    await expect(userSelector).toBeVisible();
     
     // Select user again
     await userSelector.selectOption(testUser.username);
-    await page.waitForTimeout(500);
+    await expect(checkboxes.first()).toBeVisible({ timeout: 5000 });
     
     // Verify checkbox is still checked
     const reloadedCheckbox = checkboxes.nth(2);
@@ -102,15 +103,15 @@ test.describe('Menu Management', () => {
     const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for menu list to load
-    await page.waitForTimeout(500);
+    // Wait for save button to be available
+    const saveButton = page.locator('button:has-text("Save")');
+    await expect(saveButton).toBeVisible({ timeout: 5000 });
     
     // Click save button
-    const saveButton = page.locator('button:has-text("Save")');
     await saveButton.click();
     
-    // Wait for success message
-    await page.waitForTimeout(1000);
+    // Wait for network idle after save
+    await page.waitForLoadState('networkidle');
     
     // Look for success indicator (could be a message, notification, etc.)
     // This might need adjustment based on actual UI implementation
@@ -128,33 +129,35 @@ test.describe('Menu Management', () => {
     const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for menu list to load
-    await page.waitForTimeout(500);
+    // Wait for checkboxes to load
+    const checkboxes = page.locator('input[type="checkbox"]');
+    await expect(checkboxes.first()).toBeVisible({ timeout: 5000 });
     
     // Check some checkboxes
-    const checkboxes = page.locator('input[type="checkbox"]');
     await checkboxes.nth(0).click();
     await checkboxes.nth(1).click();
     
     // Save settings
     const saveButton = page.locator('button:has-text("Save")');
+    await expect(saveButton).toBeVisible();
     await saveButton.click();
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
     
     // Click reset button
     const resetButton = page.locator('button:has-text("Reset")');
+    await expect(resetButton).toBeVisible();
     await resetButton.click();
     
     // Wait for reset to complete
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
     
     // Reload page
     await page.reload();
-    await page.waitForTimeout(1000);
+    await expect(userSelector).toBeVisible();
     
     // Select user again
     await userSelector.selectOption(testUser.username);
-    await page.waitForTimeout(500);
+    await expect(checkboxes.first()).toBeVisible({ timeout: 5000 });
     
     // Verify all checkboxes are unchecked
     const checkbox1 = checkboxes.nth(0);
@@ -169,8 +172,8 @@ test.describe('Menu Management', () => {
     const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for menu list to load
-    await page.waitForTimeout(500);
+    // Wait for checkboxes to load
+    await expect(page.locator('input[type="checkbox"]').first()).toBeVisible({ timeout: 5000 });
     
     // Look for submenu toggles/expanders (based on UI implementation)
     const submenuToggles = page.locator('button:has-text("Show"), button:has-text("Hide"), [class*="toggle"], [class*="expand"]');
@@ -179,8 +182,8 @@ test.describe('Menu Management', () => {
       // Click first submenu toggle
       await submenuToggles.first().click();
       
-      // Wait for animation
-      await page.waitForTimeout(300);
+      // Wait for submenu to expand (check for increased checkbox count or specific submenu elements)
+      await page.waitForLoadState('domcontentloaded');
       
       // Verify submenu items appear
       const checkboxesAfter = page.locator('input[type="checkbox"]');

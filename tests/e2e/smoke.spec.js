@@ -63,8 +63,8 @@ test.describe('Smoke Tests', () => {
     await loginToWordPress(page);
     await page.goto('/wp-admin/admin.php?page=useradminsimplifier/useradminsimplifier.php');
     
-    // Wait for React to render
-    await page.waitForTimeout(2000);
+    // Wait for React root to be visible
+    await expect(page.locator('#uas-react-root')).toBeVisible({ timeout: 10000 });
     
     // Check there are no React errors
     expect(consoleErrors).toEqual([]);
@@ -74,19 +74,18 @@ test.describe('Smoke Tests', () => {
     await loginToWordPress(page);
     await page.goto('/wp-admin/admin.php?page=useradminsimplifier/useradminsimplifier.php');
     
-    // Wait for React to render
-    await page.waitForTimeout(1000);
-    
     // Check for user selector
-    await expect(page.locator('select, [role="combobox"]').first()).toBeVisible();
+    const userSelector = page.locator('select, [role="combobox"]').first();
+    await expect(userSelector).toBeVisible();
     
     // Select a user to reveal more UI
-    const userSelector = page.locator('select').first();
     const optionCount = await userSelector.locator('option').count();
     
     if (optionCount > 1) {
       await userSelector.selectOption({ index: 1 });
-      await page.waitForTimeout(500);
+      
+      // Wait for buttons to appear
+      await expect(page.locator('button:has-text("Save")').first()).toBeVisible({ timeout: 5000 });
       
       // Check for save/reset buttons
       await expect(page.locator('button:has-text("Save"), button:has-text("Reset")')).toHaveCount(2);

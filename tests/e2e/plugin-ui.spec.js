@@ -22,9 +22,6 @@ test.describe('Plugin UI', () => {
   test('should display user selector', async ({ page }) => {
     await navigateToPlugin(page);
     
-    // Wait for React to render
-    await page.waitForTimeout(1000);
-    
     // Check for user selector dropdown
     const userSelector = page.locator('select, [role="combobox"]').first();
     await expect(userSelector).toBeVisible();
@@ -33,15 +30,13 @@ test.describe('Plugin UI', () => {
   test('should display menu list when user is selected', async ({ page }) => {
     await navigateToPlugin(page);
     
-    // Wait for React to render
-    await page.waitForTimeout(1000);
-    
     // Select first available user
     const userSelector = page.locator('select').first();
+    await expect(userSelector).toBeVisible();
     await userSelector.selectOption({ index: 1 });
     
-    // Wait for menu list to load
-    await page.waitForTimeout(500);
+    // Wait for checkboxes to appear after user selection
+    await expect(page.locator('input[type="checkbox"]').first()).toBeVisible({ timeout: 5000 });
     
     // Check that menu checkboxes are visible
     const checkboxes = page.locator('input[type="checkbox"]');
@@ -53,19 +48,14 @@ test.describe('Plugin UI', () => {
   test('should display Save and Reset buttons when user is selected', async ({ page }) => {
     await navigateToPlugin(page);
     
-    // Wait for React to render
-    await page.waitForTimeout(1000);
-    
     // Select first available user
     const userSelector = page.locator('select').first();
+    await expect(userSelector).toBeVisible();
     await userSelector.selectOption({ index: 1 });
     
-    // Wait for buttons to appear
-    await page.waitForTimeout(500);
-    
-    // Check for Save button
+    // Check for Save button (wait for it to appear)
     const saveButton = page.locator('button:has-text("Save")');
-    await expect(saveButton).toBeVisible();
+    await expect(saveButton).toBeVisible({ timeout: 5000 });
     
     // Check for Reset button
     const resetButton = page.locator('button:has-text("Reset")');
@@ -75,15 +65,13 @@ test.describe('Plugin UI', () => {
   test('should show admin bar options section', async ({ page }) => {
     await navigateToPlugin(page);
     
-    // Wait for React to render
-    await page.waitForTimeout(1000);
-    
     // Select first available user
     const userSelector = page.locator('select').first();
+    await expect(userSelector).toBeVisible();
     await userSelector.selectOption({ index: 1 });
     
-    // Wait for content to load
-    await page.waitForTimeout(500);
+    // Wait for content to load by checking for checkboxes
+    await expect(page.locator('input[type="checkbox"]').first()).toBeVisible({ timeout: 5000 });
     
     // Check for admin bar section
     const adminBarSection = page.locator('text=/admin bar/i');

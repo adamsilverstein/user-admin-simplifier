@@ -34,8 +34,8 @@ test.describe('Admin Bar Customization', () => {
     await loginToWordPress(page);
     await navigateToPlugin(page);
     
-    // Wait for React to render
-    await page.waitForTimeout(1000);
+    // Wait for user selector to be available
+    await expect(page.locator('select').first()).toBeVisible();
   });
 
   test('should display admin bar disable option', async ({ page }) => {
@@ -43,8 +43,8 @@ test.describe('Admin Bar Customization', () => {
     const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for content to load
-    await page.waitForTimeout(500);
+    // Wait for content to load by checking for any checkbox or input
+    await expect(page.locator('input[type="checkbox"]').first()).toBeVisible({ timeout: 5000 });
     
     // Look for admin bar disable checkbox or option
     const adminBarOption = page.locator('text=/disable.*admin bar/i, input[id*="admin-bar"], input[name*="admin-bar"]').first();
@@ -56,8 +56,8 @@ test.describe('Admin Bar Customization', () => {
     const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for content to load
-    await page.waitForTimeout(500);
+    // Wait for checkboxes to load
+    await expect(page.locator('input[type="checkbox"]').first()).toBeVisible({ timeout: 5000 });
     
     // Look for admin bar section with checkboxes
     const adminBarSection = page.locator('text=/admin bar menu/i');
@@ -78,8 +78,8 @@ test.describe('Admin Bar Customization', () => {
     const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for content to load
-    await page.waitForTimeout(500);
+    // Wait for checkboxes to load
+    await expect(page.locator('input[type="checkbox"]').first()).toBeVisible({ timeout: 5000 });
     
     // Find checkboxes (admin bar or menu items)
     const checkboxes = page.locator('input[type="checkbox"]');
@@ -103,11 +103,10 @@ test.describe('Admin Bar Customization', () => {
     const userSelector = page.locator('select').first();
     await userSelector.selectOption(testUser.username);
     
-    // Wait for content to load
-    await page.waitForTimeout(500);
-    
-    // Find and check an admin bar related checkbox
+    // Wait for checkboxes to load
     const checkboxes = page.locator('input[type="checkbox"]');
+    await expect(checkboxes.first()).toBeVisible({ timeout: 5000 });
+    
     const count = await checkboxes.count();
     
     if (count > 0) {
@@ -120,18 +119,19 @@ test.describe('Admin Bar Customization', () => {
       
       // Save settings
       const saveButton = page.locator('button:has-text("Save")');
+      await expect(saveButton).toBeVisible();
       await saveButton.click();
       
       // Wait for save to complete
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle');
       
       // Reload page
       await page.reload();
-      await page.waitForTimeout(1000);
+      await expect(userSelector).toBeVisible();
       
       // Select user again
       await userSelector.selectOption(testUser.username);
-      await page.waitForTimeout(500);
+      await expect(checkboxes.first()).toBeVisible({ timeout: 5000 });
       
       // Verify checkbox is still checked
       const reloadedCheckbox = checkboxes.last();
