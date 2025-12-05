@@ -11,6 +11,10 @@ on:
       - main
       - master
 
+# Limit permissions for security
+permissions:
+  contents: read
+
 jobs:
   # JavaScript Linting Job
   lint-js:
