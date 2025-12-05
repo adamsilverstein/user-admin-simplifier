@@ -434,7 +434,8 @@ License: MIT
 			}
 
 			if (
-				( isset( $menu_bar_item->title ) && $menu_bar_item->title &&
+				( isset( $menu_bar_item->id ) &&
+				  isset( $menu_bar_item->title ) && $menu_bar_item->title &&
 				  '' !== $menu_bar_item->title &&
 				  ( ! isset( $menu_bar_item->parent ) || ! $menu_bar_item->parent ) &&
 				  'Menu' !== wp_strip_all_tags( $menu_bar_item->title ) ) ||
@@ -442,7 +443,7 @@ License: MIT
 			) {
 				$title = isset( $title_map[ $menu_bar_item->id ] )
 					? $title_map[ $menu_bar_item->id ]
-					: wp_strip_all_tags( $menu_bar_item->title );
+					: ( isset( $menu_bar_item->title ) ? wp_strip_all_tags( $menu_bar_item->title ) : '' );
 
 				$item = array(
 					'id'       => sanitize_key( $menu_bar_item->id ),
@@ -457,6 +458,7 @@ License: MIT
 					}
 
 					if (
+						isset( $sub_menu_bar_item->id ) &&
 						isset( $sub_menu_bar_item->parent ) &&
 						0 === strpos( $sub_menu_bar_item->parent, $menu_bar_item->id ) &&
 						isset( $sub_menu_bar_item->title ) &&

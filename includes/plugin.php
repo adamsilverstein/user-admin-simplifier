@@ -13,10 +13,10 @@ namespace User_Admin_Simplifier;
  */
 final class Plugin {
 	/**
-	 * The plugin context object.
+	 * The plugin main file path.
 	 *
 	 * @since 2.0.0
-	 * @var Context
+	 * @var string
 	 */
 	private $context;
 

@@ -1,0 +1,10 @@
+parameters:
+    level: 3
+    paths:
+        - useradminsimplifier.php
+        - includes
+        - uninstall.php
+    excludePaths:
+        - tests/*
+    bootstrapFiles:
+        - phpstan-bootstrap.php

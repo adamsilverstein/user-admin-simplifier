@@ -23,6 +23,42 @@ Submenus are now available for disabling.  Note that disabling a top level menu 
 
 Unininstalling and deleting the plugin will remove all of its settings.
 
+== Development ==
+
+= Requirements =
+
+* PHP 7.4 or higher
+* Composer (for managing PHP dependencies)
+* Node.js and npm (for building JavaScript assets)
+
+= Setup =
+
+1. Clone the repository
+2. Run `composer install` to install PHP dependencies
+3. Run `npm install` to install JavaScript dependencies
+4. Run `npm run build` to build the React application
+
+= Code Quality =
+
+This plugin uses PHPStan for static analysis to ensure code quality and type safety.
+
+To run PHPStan:
+
+`composer install` (first time only)
+`npm run phpstan`
+
+Or directly with PHP:
+
+`php vendor/bin/phpstan analyse`
+
+The project is configured to run PHPStan at level 3 for improved reliability and maintainability.
+
+= Testing =
+
+Run PHP unit tests:
+
+`npm run test:php`
+
 == Frequently Asked Questions ==
 
 = Does it work with WordPress Multisite? =
