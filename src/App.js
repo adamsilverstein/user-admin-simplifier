@@ -192,7 +192,7 @@ const App = () => {
           <hr />
           
           <h3>{strings.disableAdminBar || 'Disable the admin bar'}:</h3>
-          <div className={`menu-item ${Object.keys(currentUserOptions).length % 2 === 0 ? 'menumain' : 'menualternate'}`}>
+          <div className="menu-item uas-admin-bar-toggle">
             <label>
               <input 
                 type="checkbox" 
