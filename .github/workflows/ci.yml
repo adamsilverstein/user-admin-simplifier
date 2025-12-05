@@ -1,0 +1,110 @@
+name: CI
+
+# Run on pull request commits and pushes to main/master
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  # JavaScript Linting Job
+  lint-js:
+    name: JavaScript Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint
+
+  # JavaScript Build Job
+  build-js:
+    name: JavaScript Build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build JavaScript
+        run: npm run build
+      
+      - name: Check build artifacts
+        run: |
+          if [ ! -f build/admin.js ]; then
+            echo "Error: build/admin.js was not created"
+            exit 1
+          fi
+          if [ ! -f build/admin.css ]; then
+            echo "Error: build/admin.css was not created"
+            exit 1
+          fi
+          echo "Build artifacts created successfully"
+
+  # PHP Tests Job
+  test-php:
+    name: PHP Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php-version: ['7.4', '8.0', '8.1', '8.2', '8.3']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+      
+      - name: Run PHP Tests
+        run: npm run test:php
+
+  # PHP Static Analysis Job
+  phpstan:
+    name: PHPStan Static Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+      
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+      
+      - name: Run PHPStan
+        run: npm run phpstan
