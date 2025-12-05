@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+vendor/
 
 # Build output (keep build/ in repo for deployment)
 # build/

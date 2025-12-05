@@ -457,6 +457,7 @@ License: MIT
 					}
 
 					if (
+						isset( $sub_menu_bar_item->id ) &&
 						isset( $sub_menu_bar_item->parent ) &&
 						0 === strpos( $sub_menu_bar_item->parent, $menu_bar_item->id ) &&
 						isset( $sub_menu_bar_item->title ) &&

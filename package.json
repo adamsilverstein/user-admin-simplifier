@@ -7,7 +7,8 @@
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
     "lint": "eslint src/",
-    "test:php": "php tests/test-menu-name-cleaning.php"
+    "test:php": "php tests/test-menu-name-cleaning.php",
+    "phpstan": "php vendor/bin/phpstan analyse"
   },
   "keywords": [
     "wordpress",
