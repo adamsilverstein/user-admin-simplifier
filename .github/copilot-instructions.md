@@ -134,7 +134,7 @@ npm run test:php   # Run PHP unit tests
 4. Test manually in WordPress environment if possible
 
 ### Code Review Checklist
-- [ ] PHPStan passes (level 3)
+- [ ] PHPStan passes (level 5)
 - [ ] ESLint passes with no errors
 - [ ] All WordPress security functions used properly
 - [ ] Nonces verified for AJAX requests
