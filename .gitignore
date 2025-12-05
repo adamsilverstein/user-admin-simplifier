@@ -26,3 +26,12 @@ yarn-error.log*
 
 # Optional eslint cache
 .eslintcache
+
+# Test results and reports
+test-results/
+playwright-report/
+playwright/.cache/
+
+# WordPress environment
+.wp-env.home/
+.wp-env.override.json

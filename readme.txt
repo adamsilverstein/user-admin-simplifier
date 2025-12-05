@@ -55,9 +55,41 @@ The project is configured to run PHPStan at level 3 for improved reliability and
 
 = Testing =
 
+The plugin includes both PHP unit tests and end-to-end (E2E) tests.
+
 Run PHP unit tests:
 
 `npm run test:php`
+
+Run E2E tests:
+
+`npm run test:e2e`
+
+Run all tests:
+
+`npm run test`
+
+= End-to-End Tests =
+
+E2E tests use Playwright to test the plugin in a real WordPress environment.
+
+Setup:
+
+1. Install dependencies: `npm install`
+2. Start WordPress environment: `npm run env:start`
+3. Run tests: `npm run test:e2e`
+
+See `tests/e2e/README.md` for detailed documentation on running and writing E2E tests.
+
+Available test commands:
+
+* `npm run env:start` - Start WordPress test environment
+* `npm run env:stop` - Stop WordPress test environment
+* `npm run test:e2e` - Run E2E tests in headless mode
+* `npm run test:e2e:headed` - Run E2E tests with visible browser
+* `npm run test:e2e:ui` - Run E2E tests in interactive UI mode
+* `npm run test:e2e:debug` - Run E2E tests in debug mode
+* `npm run test:e2e:report` - View test report
 
 == Frequently Asked Questions ==
 
