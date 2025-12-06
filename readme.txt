@@ -116,6 +116,18 @@ Review the changes in the `tests/visual/app.spec.js-snapshots/` directory to ens
 
 Visual regression tests run automatically on GitHub Actions for all pull requests and pushes to main/master branches. Test reports and snapshots are uploaded as artifacts for review.
 
+= Continuous Integration =
+
+This project uses GitHub Actions to automatically run tests and linting on every pull request commit.
+
+The CI workflow includes:
+* JavaScript linting with ESLint
+* JavaScript build verification with Webpack
+* PHP unit tests across multiple PHP versions (7.4, 8.0, 8.1, 8.2, 8.3)
+* PHP static analysis with PHPStan
+
+The workflow is defined in `.github/workflows/ci.yml` and runs automatically on pull requests to main/master branches.
+
 == Frequently Asked Questions ==
 
 = Does it work with WordPress Multisite? =
