@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Admin Simplifier - Test</title>
+    <link rel="stylesheet" href="build/admin.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            margin: 20px;
+            background: #f0f0f1;
+        }
+    </style>
+</head>
+<body>
+    <div id="uas-react-root"></div>
+    
+    <script>
+        // Mock WordPress data for testing
+        window.uasData = {
+            users: [
+                { id: '1', name: 'Admin User', login: 'admin', nicename: 'admin' },
+                { id: '2', name: 'Editor User', login: 'editor', nicename: 'editor' },
+                { id: '3', name: 'Author User', login: 'author', nicename: 'author' }
+            ],
+            menuItems: [
+                {
+                    id: 'dashboard',
+                    name: 'Dashboard',
+                    submenus: []
+                },
+                {
+                    id: 'posts',
+                    name: 'Posts',
+                    submenus: [
+                        { id: 'posts-all', name: 'All Posts' },
+                        { id: 'posts-new', name: 'Add New' },
+                        { id: 'posts-categories', name: 'Categories' },
+                        { id: 'posts-tags', name: 'Tags' }
+                    ]
+                },
+                {
+                    id: 'media',
+                    name: 'Media',
+                    submenus: [
+                        { id: 'media-library', name: 'Library' },
+                        { id: 'media-new', name: 'Add New' }
+                    ]
+                },
+                {
+                    id: 'pages',
+                    name: 'Pages',
+                    submenus: [
+                        { id: 'pages-all', name: 'All Pages' },
+                        { id: 'pages-new', name: 'Add New' }
+                    ]
+                },
+                {
+                    id: 'tools',
+                    name: 'Tools',
+                    submenus: [
+                        { id: 'tools-import', name: 'Import' },
+                        { id: 'tools-export', name: 'Export' }
+                    ]
+                }
+            ],
+            adminBarItems: [
+                {
+                    id: 'wp-logo',
+                    name: 'WordPress',
+                    submenus: [
+                        { id: 'wp-logo-about', name: 'About WordPress' },
+                        { id: 'wp-logo-documentation', name: 'Documentation' }
+                    ]
+                },
+                {
+                    id: 'site-name',
+                    name: 'My Site',
+                    submenus: [
+                        { id: 'site-name-dashboard', name: 'Dashboard' },
+                        { id: 'site-name-themes', name: 'Themes' }
+                    ]
+                }
+            ],
+            options: {
+                'admin': {
+                    'posts': 1,
+                    'posts-categories': 1
+                }
+            },
+            nonce: 'test-nonce-12345',
+            ajaxUrl: '/wp-admin/admin-ajax.php',
+            strings: {
+                title: 'User Admin Simplifier',
+                chooseUser: 'Choose a user',
+                selectUser: 'Select a user',
+                disableMenus: 'Disable menus/submenus',
+                disableAdminBar: 'Disable the admin bar',
+                disableAdminBarLabel: 'Completely disable the admin bar for this user.',
+                disableAdminBarMenus: 'Disable admin bar menus/submenus',
+                saveChanges: 'Save Changes',
+                clearSettings: 'Clear User Settings',
+                saving: 'Saving...',
+                saveSuccess: 'Settings saved successfully!',
+                saveError: 'Failed to save settings.',
+                resetSuccess: 'User settings reset successfully!',
+                resetError: 'Failed to reset settings.'
+            }
+        };
+    </script>
+    <script src="build/admin.js"></script>
+</body>
+</html>

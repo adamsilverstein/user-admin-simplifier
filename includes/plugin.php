@@ -30,4 +30,15 @@ final class Plugin {
 	public function __construct( $main_file ) {
 		$this->context = $main_file;
 	}
+
+	/**
+	 * Gets the plugin main file path.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @return string The plugin main file path.
+	 */
+	public function get_context() {
+		return $this->context;
+	}
 }
