@@ -30,6 +30,7 @@ yarn-error.log*
 # Test results and reports
 test-results/
 playwright-report/
+blob-report/
 playwright/.cache/
 
 # WordPress environment

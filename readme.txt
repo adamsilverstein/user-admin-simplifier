@@ -55,21 +55,15 @@ The project is configured to run PHPStan at level 3 for improved reliability and
 
 = Testing =
 
-The plugin includes both PHP unit tests and end-to-end (E2E) tests.
+The plugin includes PHP unit tests, end-to-end (E2E) tests, and visual regression tests.
+
+**PHP Unit Tests**
 
 Run PHP unit tests:
 
 `npm run test:php`
 
-Run E2E tests:
-
-`npm run test:e2e`
-
-Run all tests:
-
-`npm run test`
-
-= End-to-End Tests =
+**End-to-End Tests**
 
 E2E tests use Playwright to test the plugin in a real WordPress environment.
 
@@ -81,7 +75,7 @@ Setup:
 
 See `tests/e2e/README.md` for detailed documentation on running and writing E2E tests.
 
-Available test commands:
+Available E2E test commands:
 
 * `npm run env:start` - Start WordPress test environment
 * `npm run env:stop` - Stop WordPress test environment
@@ -90,6 +84,67 @@ Available test commands:
 * `npm run test:e2e:ui` - Run E2E tests in interactive UI mode
 * `npm run test:e2e:debug` - Run E2E tests in debug mode
 * `npm run test:e2e:report` - View test report
+
+**Visual Regression Testing**
+
+This plugin uses Playwright for automated visual regression testing to catch unintended visual changes during development.
+
+*Prerequisites:*
+
+- Node.js 18 or higher
+- Playwright browsers installed (Chromium by default)
+
+*Initial Setup:*
+
+1. Install dependencies: `npm install`
+2. Install Playwright browsers: `npx playwright install --with-deps chromium`
+3. Build the application: `npm run build`
+
+*Running Visual Tests:*
+
+- Run all visual tests: `npm run test:visual`
+- Run tests in UI mode (interactive): `npm run test:visual:ui`
+- Update baseline snapshots: `npm run test:visual:update`
+
+*How It Works:*
+
+Visual regression tests capture screenshots of the UI and compare them to baseline images. If there are visual differences, the tests will fail and generate a report showing what changed. This helps detect:
+
+- Unintended layout changes
+- CSS styling issues
+- Component rendering problems
+- Responsive design regressions
+
+*Test Coverage:*
+
+The visual tests cover:
+- Initial app state (no user selected)
+- User selector dropdown
+- Full menu interface with user selected
+- Menu list with toggle functionality
+- Admin bar options
+- Save and reset buttons
+- Checked menu states
+- Expandable submenus
+- Responsive layouts (tablet and mobile views)
+
+*Updating Snapshots:*
+
+When intentional UI changes are made, update the baseline snapshots:
+
+`npm run test:visual:update`
+
+Review the changes in the `tests/visual/app.spec.js-snapshots/` directory to ensure they match your intended changes.
+
+*CI Integration:*
+
+Visual regression tests run automatically on GitHub Actions for all pull requests and pushes to main/master branches. Test reports and snapshots are uploaded as artifacts for review.
+
+**Running All Tests**
+
+Run all tests (PHP unit tests + E2E tests):
+
+`npm run test`
 
 == Frequently Asked Questions ==
 
