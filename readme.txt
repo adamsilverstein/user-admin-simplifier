@@ -55,11 +55,35 @@ The project is configured to run PHPStan at level 3 for improved reliability and
 
 = Testing =
 
+The plugin includes PHP unit tests, end-to-end (E2E) tests, and visual regression tests.
+
 **PHP Unit Tests**
 
 Run PHP unit tests:
 
 `npm run test:php`
+
+**End-to-End Tests**
+
+E2E tests use Playwright to test the plugin in a real WordPress environment.
+
+Setup:
+
+1. Install dependencies: `npm install`
+2. Start WordPress environment: `npm run env:start`
+3. Run tests: `npm run test:e2e`
+
+See `tests/e2e/README.md` for detailed documentation on running and writing E2E tests.
+
+Available E2E test commands:
+
+* `npm run env:start` - Start WordPress test environment
+* `npm run env:stop` - Stop WordPress test environment
+* `npm run test:e2e` - Run E2E tests in headless mode
+* `npm run test:e2e:headed` - Run E2E tests with visible browser
+* `npm run test:e2e:ui` - Run E2E tests in interactive UI mode
+* `npm run test:e2e:debug` - Run E2E tests in debug mode
+* `npm run test:e2e:report` - View test report
 
 **Visual Regression Testing**
 
@@ -116,17 +140,11 @@ Review the changes in the `tests/visual/app.spec.js-snapshots/` directory to ens
 
 Visual regression tests run automatically on GitHub Actions for all pull requests and pushes to main/master branches. Test reports and snapshots are uploaded as artifacts for review.
 
-= Continuous Integration =
+**Running All Tests**
 
-This project uses GitHub Actions to automatically run tests and linting on every pull request commit.
+Run all tests (PHP unit tests + E2E tests):
 
-The CI workflow includes:
-* JavaScript linting with ESLint
-* JavaScript build verification with Webpack
-* PHP unit tests across multiple PHP versions (7.4, 8.0, 8.1, 8.2, 8.3)
-* PHP static analysis with PHPStan
-
-The workflow is defined in `.github/workflows/ci.yml` and runs automatically on pull requests to main/master branches.
+`npm run test`
 
 == Frequently Asked Questions ==
 

@@ -1,0 +1,83 @@
+/**
+ * Example E2E Test Template
+ * 
+ * Copy this file and rename it to create new E2E tests.
+ * Example: cp example.spec.js.template my-feature.spec.js
+ */
+
+const { test, expect } = require('@playwright/test');
+const { loginToWordPress, navigateToPlugin } = require('./utils/wordpress');
+
+/**
+ * Test suite for [Feature Name]
+ */
+test.describe('[Feature Name]', () => {
+  // Run before each test in this suite
+  test.beforeEach(async ({ page }) => {
+    // Login to WordPress as admin
+    await loginToWordPress(page);
+    
+    // Navigate to the plugin page
+    await navigateToPlugin(page);
+    
+    // Wait for user selector to be visible (better than arbitrary timeout)
+    await expect(page.locator('select').first()).toBeVisible();
+  });
+
+  // Example test case
+  test('should [describe what this tests]', async ({ page }) => {
+    // Arrange: Set up test conditions
+    const userSelector = page.locator('select').first();
+    
+    // Act: Perform action
+    await userSelector.selectOption({ index: 1 });
+    
+    // Assert: Verify expected outcome
+    await expect(page.locator('#uas-react-root')).toBeVisible();
+  });
+
+  // Example test with user creation
+  test('should [test with custom user]', async ({ page }) => {
+    // You can create test users if needed
+    // const testUser = await createTestUser(page, {
+    //   username: 'testuser',
+    //   email: 'test@example.com',
+    // });
+    
+    // Your test logic here
+    
+    // Remember to clean up
+    // await deleteTestUser(page, testUser.username);
+  });
+});
+
+// Test suite with setup/teardown
+test.describe('[Feature with Setup]', () => {
+  let testUser;
+
+  // Run once before all tests in this suite
+  test.beforeAll(async ({ browser }) => {
+    const page = await browser.newPage();
+    await loginToWordPress(page);
+    
+    // Create resources needed for all tests
+    // testUser = await createTestUser(page, { ... });
+    
+    await page.close();
+  });
+
+  // Run once after all tests in this suite
+  test.afterAll(async ({ browser }) => {
+    const page = await browser.newPage();
+    await loginToWordPress(page);
+    
+    // Clean up resources
+    // await deleteTestUser(page, testUser.username);
+    
+    await page.close();
+  });
+
+  test('should [use setup data]', async ({ page }) => {
+    // Tests here can use testUser
+  });
+});
