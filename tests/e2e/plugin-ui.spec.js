@@ -16,7 +16,7 @@ test.describe('Plugin UI', () => {
     await expect(page.locator('#uas-react-root')).toBeVisible();
     
     // Check that main title is present
-    await expect(page.locator('h1')).toContainText('User Admin Simplifier');
+    await expect(page.getByRole('heading', { name: 'User Admin Simplifier' })).toBeVisible();
   });
 
   test('should display user selector', async ({ page }) => {

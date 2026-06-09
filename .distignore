@@ -1,0 +1,52 @@
+# Files and directories excluded from the WordPress.org deployment.
+# Used by 10up/action-wordpress-plugin-deploy (rsync excludes).
+
+# Version control and CI
+/.claude
+/.git
+/.github
+/.distignore
+/.gitignore
+
+# Development directories
+/node_modules
+/src
+/tests
+/test-results
+/playwright-report
+/blob-report
+/playwright
+/vendor
+/.wp-env.home
+
+# Development files
+/.eslintrc.json
+/.eslintcache
+/.nvmrc
+/.wp-env.json
+/.wp-env.override.json
+/composer.json
+/composer.lock
+/CONTRIBUTING.md
+/deploy.sh
+/E2E_TESTING_SUMMARY.md
+/index.html
+/MERGE_RESOLUTION.md
+/package.json
+/package-lock.json
+/phpstan-bootstrap.php
+/phpstan.neon
+/playwright.config.js
+/README.md
+/TEST_FIXES.md
+/test-app.html
+/webpack.config.js
+
+# IDE and OS files
+/.idea
+/.vscode
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.log

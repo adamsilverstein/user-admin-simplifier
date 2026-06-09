@@ -64,8 +64,8 @@ test.describe('Admin Bar Customization', () => {
     // Wait for content to load by checking for any checkbox or input
     await expect(page.locator('input[type="checkbox"]').first()).toBeVisible({ timeout: 5000 });
     
-    // Look for admin bar disable checkbox or option
-    const adminBarOption = page.locator('text=/disable.*admin bar/i, input[id*="admin-bar"], input[name*="admin-bar"]').first();
+    // Look for the admin bar disable checkbox
+    const adminBarOption = page.getByRole('checkbox', { name: /disable the admin bar/i });
     await expect(adminBarOption).toBeVisible();
   });
 
