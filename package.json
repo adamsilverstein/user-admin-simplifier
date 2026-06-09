@@ -45,7 +45,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "http-server": "^14.1.1",
     "mini-css-extract-plugin": "^2.7.6",
-    "webpack": "^5.88.0",
+    "webpack": "^5.107.2",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
