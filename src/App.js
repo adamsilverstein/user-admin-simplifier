@@ -62,6 +62,22 @@ const App = () => {
   }, [selectedUser]);
 
   /**
+   * Handle menu reordering
+   * Stores the full top-level menu order for the selected user.
+   */
+  const handleMenuReorder = useCallback((menuOrder) => {
+    if (!selectedUser) return;
+
+    setUserOptions(prev => ({
+      ...prev,
+      [selectedUser]: {
+        ...prev[selectedUser],
+        'menu-order': menuOrder
+      }
+    }));
+  }, [selectedUser]);
+
+  /**
    * Save options via AJAX
    */
   const handleSave = useCallback(async () => {
@@ -182,10 +198,11 @@ const App = () => {
         <div className="uas-container" id="choosemenus">
           <h3>{strings.disableMenus || 'Disable menus/submenus'}:</h3>
           
-          <MenuList 
+          <MenuList
             menuItems={menuItems}
             userOptions={currentUserOptions}
             onToggle={handleMenuToggle}
+            onReorder={handleMenuReorder}
             strings={strings}
           />
 

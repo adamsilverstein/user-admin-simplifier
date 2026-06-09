@@ -90,7 +90,9 @@ jobs:
           coverage: none
       
       - name: Run PHP Tests
-        run: php tests/test-menu-name-cleaning.php
+        run: |
+          php tests/test-menu-name-cleaning.php
+          php tests/test-menu-order.php
 
   # PHP Static Analysis Job
   phpstan:
