@@ -4,7 +4,7 @@ Donate link:
 Tags: admin simplify menus submenus
 Requires at least: 3.0.1
 Tested up to: 6.9
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -187,6 +187,9 @@ Make css class for +/- more specific to avoid conflicts.
 
 == Changelog ==
 
+= 3.0.1 =
+* Security hardening: sanitize option keys when saving user settings.
+
 = 2.0.0 =
 * Major UI rewrite using React
 * Settings are now saved via AJAX without page reload
@@ -255,3 +258,7 @@ Bug fix.
 
 = 0.23 =
 * initial release.
+
+
+### WordFence verification code
+axjzfnshmtr7f7ggjqovzuxjzxrlpbc7
