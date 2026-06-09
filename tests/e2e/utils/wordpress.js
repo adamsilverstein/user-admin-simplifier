@@ -81,8 +81,18 @@ export async function createTestUser(page, userData = {}) {
   await page.fill('#first_name', user.firstName);
   await page.fill('#last_name', user.lastName);
   await page.fill('#pass1', user.password);
-  await page.fill('#pass2', user.password);
-  
+
+  // The confirm field (#pass2) is hidden when JavaScript is enabled, and a
+  // weak-password confirmation checkbox may appear - handle both.
+  const pass2 = page.locator('#pass2');
+  if (await pass2.isVisible()) {
+    await pass2.fill(user.password);
+  }
+  const weakConfirm = page.locator('.pw-weak input.pw-checkbox');
+  if (await weakConfirm.isVisible()) {
+    await weakConfirm.check();
+  }
+
   // Select role
   await page.selectOption('#role', user.role);
   
