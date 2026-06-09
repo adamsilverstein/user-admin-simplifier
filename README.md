@@ -166,6 +166,41 @@ See `.github/workflows/visual-regression.yml` for the full configuration.
 - Check the Playwright HTML report in CI artifacts
 - Run `npm run test:visual:ui` locally for interactive debugging
 
+## Deployment
+
+Releases are deployed to the [WordPress.org plugin directory](https://wordpress.org/plugins/user-admin-simplifier/) automatically via the [10up/action-wordpress-plugin-deploy](https://github.com/10up/action-wordpress-plugin-deploy) GitHub Action. See `.github/workflows/deploy.yml`.
+
+### How it works
+
+Publishing a GitHub release for a semantic version tag (e.g. `3.0.1` or `v3.0.1`) triggers the deployment workflow, which:
+
+1. Verifies the release is not a draft or prerelease
+2. Verifies the release tag, the `Stable tag` in `readme.txt`, and the `Version` in the plugin header all match
+3. Builds the JavaScript assets with `npm run build`
+4. Commits the plugin to the WordPress.org SVN repository (trunk and a version tag), excluding development files listed in `.distignore`
+
+### Releasing a new version
+
+1. Update the version number in `useradminsimplifier.php` (`Version` header), `readme.txt` (`Stable tag`), and `package.json`
+2. Update the changelog in `readme.txt`
+3. Merge the changes to `main`
+4. Create and publish a GitHub release with a tag matching the new version (e.g. `3.0.1`)
+
+The workflow then deploys to WordPress.org. If any version check fails, the workflow exits without deploying.
+
+### Required repository secrets
+
+The workflow needs two [GitHub Actions secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) configured under **Settings → Secrets and variables → Actions**:
+
+| Secret | Description |
+|--------|-------------|
+| `SVN_USERNAME` | WordPress.org username with commit access to the plugin SVN repository |
+| `SVN_PASSWORD` | The corresponding WordPress.org password |
+
+### Excluded files
+
+Development files (source, tests, build tooling, CI configuration) are excluded from the deployed package via `.distignore`. The deployed package contains only the runtime files: the main plugin file, `uninstall.php`, `readme.txt`, and the `build/`, `includes/`, and `images/` directories.
+
 ## License
 
 MIT License - see LICENSE file for details.
