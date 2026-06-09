@@ -135,7 +135,14 @@ export async function deleteTestUser(page, username) {
     // Click delete link
     const deleteLink = userRow.first().locator('a:has-text("Delete")');
     await deleteLink.click();
-    
+
+    // If the user has content, WordPress disables the confirm button until
+    // a content-disposition option is chosen - pick "Delete all content".
+    const deleteContentOption = page.locator('#delete_option0');
+    if (await deleteContentOption.isVisible().catch(() => false)) {
+      await deleteContentOption.check();
+    }
+
     // Confirm deletion
     await page.click('#submit');
     
