@@ -1,0 +1,73 @@
+name: Deploy to WordPress.org
+
+# Deploy when a GitHub release is published for a semantic version tag
+# (e.g. 3.0.1 or v3.0.1). Drafts and prereleases are never deployed.
+on:
+  release:
+    types: [published]
+
+# Limit permissions for security
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to WordPress.org
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify release tag is a semantic version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if ! echo "${TAG_VERSION}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: release tag '${GITHUB_REF_NAME}' is not a semantic version (expected e.g. 3.0.1 or v3.0.1)"
+            exit 1
+          fi
+
+      - name: Verify version consistency
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          README_VERSION=$(grep -m1 '^Stable tag:' readme.txt | awk '{print $3}' | tr -d '[:space:]')
+          PLUGIN_VERSION=$(grep -m1 '^Version:' useradminsimplifier.php | awk '{print $2}' | tr -d '[:space:]')
+          echo "Release tag: ${TAG_VERSION}"
+          echo "readme.txt Stable tag: ${README_VERSION}"
+          echo "Plugin header Version: ${PLUGIN_VERSION}"
+          if [ "${TAG_VERSION}" != "${README_VERSION}" ] || [ "${TAG_VERSION}" != "${PLUGIN_VERSION}" ]; then
+            echo "Error: release tag, readme.txt Stable tag, and plugin header Version must all match"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build JavaScript
+        run: npm run build
+
+      - name: Check build artifacts
+        run: |
+          if [ ! -f build/admin.js ]; then
+            echo "Error: build/admin.js was not created"
+            exit 1
+          fi
+          if [ ! -f build/admin.css ]; then
+            echo "Error: build/admin.css was not created"
+            exit 1
+          fi
+          echo "Build artifacts created successfully"
+
+      - name: Deploy to WordPress.org
+        uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: user-admin-simplifier
