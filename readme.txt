@@ -255,3 +255,7 @@ Bug fix.
 
 = 0.23 =
 * initial release.
+
+
+### WordFence verification code
+axjzfnshmtr7f7ggjqovzuxjzxrlpbc7
