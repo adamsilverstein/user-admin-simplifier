@@ -49,7 +49,7 @@ test.describe('Smoke Tests', () => {
     await expect(page.locator('#uas-react-root')).toBeVisible({ timeout: 10000 });
     
     // Check for plugin title
-    await expect(page.locator('h1')).toContainText('User Admin Simplifier');
+    await expect(page.getByRole('heading', { name: 'User Admin Simplifier' })).toBeVisible();
   });
 
   test('React app renders without errors', async ({ page }) => {
