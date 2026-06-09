@@ -3,7 +3,7 @@
 Plugin Name: User Admin Simplifier
 Plugin URI: http://www.earthbound.com/plugins/user-admin-simplifier
 Description: Lets any Administrator simplify the WordPress Admin interface, on a per-user basis, by turning specific menu/submenu sections off.
-Version: 3.0.0
+Version: 3.0.1
 Author: Adam Silverstein
 Author URI: http://www.earthbound.com/plugins
 License: MIT
@@ -68,8 +68,6 @@ License: MIT
 			wp_send_json_error( array( 'message' => esc_html__( 'No user specified', 'useradminsimplifier' ) ) );
 		}
 
-		$uas_options = uas_get_admin_options();
-
 		// The 'menu-order' key holds a list of menu ids rather than an int flag,
 		// so pull it out before the int flags are sanitized.
 		$menu_order = array();
@@ -78,12 +76,22 @@ License: MIT
 			unset( $options['menu-order'] );
 		}
 
-		$user_options = is_array( $options ) ? array_map( 'intval', $options ) : array();
+		$user_options = array();
+		if ( is_array( $options ) ) {
+			foreach ( $options as $key => $value ) {
+				$clean_key = sanitize_key( $key );
+				if ( '' === $clean_key ) {
+					continue;
+				}
+				$user_options[ $clean_key ] = intval( $value );
+			}
+		}
 
 		if ( ! empty( $menu_order ) ) {
 			$user_options['menu-order'] = $menu_order;
 		}
 
+		$uas_options = uas_get_admin_options();
 		$uas_options[ $user ] = $user_options;
 		uas_save_admin_options( $uas_options );
 
