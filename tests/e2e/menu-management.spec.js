@@ -95,14 +95,16 @@ test.describe('Menu Management', () => {
       await targetCheckbox.click();
     }
     
-    // Save settings
+    // Save settings and wait for the AJAX request to complete - relying on
+    // networkidle races against the reload aborting the in-flight save.
     const saveButton = page.locator('button:has-text("Save")');
     await expect(saveButton).toBeVisible();
-    await saveButton.click();
-    
-    // Wait for page to update (check for success or wait for network idle)
-    await page.waitForLoadState('networkidle');
-    
+    const [saveResponse] = await Promise.all([
+      page.waitForResponse((resp) => resp.url().includes('admin-ajax.php')),
+      saveButton.click(),
+    ]);
+    expect(saveResponse.ok()).toBeTruthy();
+
     // Reload the page
     await page.reload();
     await expect(userSelector).toBeVisible();
@@ -155,20 +157,25 @@ test.describe('Menu Management', () => {
     await checkboxes.nth(0).click();
     await checkboxes.nth(1).click();
     
-    // Save settings
+    // Save settings and wait for the AJAX request to complete - relying on
+    // networkidle races against the reload aborting the in-flight request.
     const saveButton = page.locator('button:has-text("Save")');
     await expect(saveButton).toBeVisible();
-    await saveButton.click();
-    await page.waitForLoadState('networkidle');
-    
-    // Click reset button
+    const [saveResponse] = await Promise.all([
+      page.waitForResponse((resp) => resp.url().includes('admin-ajax.php')),
+      saveButton.click(),
+    ]);
+    expect(saveResponse.ok()).toBeTruthy();
+
+    // Reset and wait for its AJAX request to complete as well
     const resetButton = page.locator('button:has-text("Reset")');
     await expect(resetButton).toBeVisible();
-    await resetButton.click();
-    
-    // Wait for reset to complete
-    await page.waitForLoadState('networkidle');
-    
+    const [resetResponse] = await Promise.all([
+      page.waitForResponse((resp) => resp.url().includes('admin-ajax.php')),
+      resetButton.click(),
+    ]);
+    expect(resetResponse.ok()).toBeTruthy();
+
     // Reload page
     await page.reload();
     await expect(userSelector).toBeVisible();
