@@ -71,7 +71,11 @@ License: MIT
 		$user_options = array();
 		if ( is_array( $options ) ) {
 			foreach ( $options as $key => $value ) {
-				$user_options[ sanitize_key( $key ) ] = intval( $value );
+				$clean_key = sanitize_key( $key );
+				if ( '' === $clean_key ) {
+					continue;
+				}
+				$user_options[ $clean_key ] = intval( $value );
 			}
 		}
 
