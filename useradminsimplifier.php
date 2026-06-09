@@ -69,7 +69,22 @@ License: MIT
 		}
 
 		$uas_options = uas_get_admin_options();
-		$uas_options[ $user ] = is_array( $options ) ? array_map( 'intval', $options ) : array();
+
+		// The 'menu-order' key holds a list of menu ids rather than an int flag,
+		// so pull it out before the int flags are sanitized.
+		$menu_order = array();
+		if ( is_array( $options ) && isset( $options['menu-order'] ) ) {
+			$menu_order = uas_sanitize_menu_order( $options['menu-order'] );
+			unset( $options['menu-order'] );
+		}
+
+		$user_options = is_array( $options ) ? array_map( 'intval', $options ) : array();
+
+		if ( ! empty( $menu_order ) ) {
+			$user_options['menu-order'] = $menu_order;
+		}
+
+		$uas_options[ $user ] = $user_options;
 		uas_save_admin_options( $uas_options );
 
 		wp_send_json_success( array( 'message' => esc_html__( 'Options saved successfully', 'useradminsimplifier' ) ) );
@@ -181,6 +196,94 @@ License: MIT
 				}
 			}
 		}
+
+		// Apply any saved custom menu order for this user.
+		if ( isset( $uas_options[ $current_user->user_nicename ]['menu-order'] ) ) {
+			$saved_order = uas_sanitize_menu_order( $uas_options[ $current_user->user_nicename ]['menu-order'] );
+			if ( ! empty( $saved_order ) ) {
+				$menu = uas_apply_menu_order( $menu, $saved_order );
+			}
+		}
+	}
+
+	/**
+	 * Sanitize a saved menu order list.
+	 *
+	 * @param  mixed $menu_order The raw menu order value.
+	 *
+	 * @return array Sanitized list of unique menu item keys.
+	 */
+	function uas_sanitize_menu_order( $menu_order ) {
+		if ( ! is_array( $menu_order ) ) {
+			return array();
+		}
+
+		$sanitized = array();
+		foreach ( $menu_order as $menu_id ) {
+			if ( ! is_string( $menu_id ) && ! is_int( $menu_id ) ) {
+				continue;
+			}
+			$menu_id = sanitize_key( $menu_id );
+			if ( '' !== $menu_id && ! in_array( $menu_id, $sanitized, true ) ) {
+				$sanitized[] = $menu_id;
+			}
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Reorder the admin menu array based on a saved menu order.
+	 *
+	 * Items found in the saved order are rearranged to match it, while items
+	 * not present in the saved order (including separators and newly added
+	 * menus) keep their default relative positions.
+	 *
+	 * @param  array $menu       The WordPress admin menu array, keyed by position.
+	 * @param  array $menu_order Ordered list of sanitized menu item keys.
+	 *
+	 * @return array The reordered menu array, re-keyed with the original positions.
+	 */
+	function uas_apply_menu_order( $menu, $menu_order ) {
+		if ( ! is_array( $menu ) || empty( $menu ) || empty( $menu_order ) ) {
+			return $menu;
+		}
+
+		// Work with the menu in its current (position keyed) order.
+		ksort( $menu );
+		$positions = array_keys( $menu );
+		$items     = array_values( $menu );
+
+		// Find the items that are part of the saved order, keyed by their menu id.
+		$ordered_slots = array();
+		$ordered_items = array();
+		foreach ( $items as $index => $item ) {
+			// Separators and items without an id always stay in place.
+			if ( ! isset( $item[5] ) ) {
+				continue;
+			}
+			$menu_id = sanitize_key( $item[5] );
+			if ( in_array( $menu_id, $menu_order, true ) && ! isset( $ordered_items[ $menu_id ] ) ) {
+				$ordered_slots[]           = $index;
+				$ordered_items[ $menu_id ] = $item;
+			}
+		}
+
+		if ( empty( $ordered_slots ) ) {
+			return $menu;
+		}
+
+		// Refill the slots used by ordered items, following the saved order.
+		$slot = 0;
+		foreach ( $menu_order as $menu_id ) {
+			if ( isset( $ordered_items[ $menu_id ] ) ) {
+				$items[ $ordered_slots[ $slot ] ] = $ordered_items[ $menu_id ];
+				$slot++;
+			}
+		}
+
+		// Re-key the reordered items with the original menu positions.
+		return array_combine( $positions, $items );
 	}
 
 	/**
@@ -295,6 +398,10 @@ License: MIT
 			'enableAllMenus'       => esc_html__( 'Enable all menus', 'useradminsimplifier' ),
 			'disableAllAdminBar'   => esc_html__( 'Disable all admin bar items', 'useradminsimplifier' ),
 			'enableAllAdminBar'    => esc_html__( 'Enable all admin bar items', 'useradminsimplifier' ),
+			'reorderHint'          => esc_html__( 'Drag a menu item, or use its arrow buttons, to change the menu order for this user.', 'useradminsimplifier' ),
+			'dragToReorder'        => esc_html__( 'Drag to reorder', 'useradminsimplifier' ),
+			'moveUp'               => esc_html__( 'Move up', 'useradminsimplifier' ),
+			'moveDown'             => esc_html__( 'Move down', 'useradminsimplifier' ),
 		);
 
 		// Enqueue React app
