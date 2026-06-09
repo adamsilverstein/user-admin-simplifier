@@ -68,8 +68,15 @@ License: MIT
 			wp_send_json_error( array( 'message' => esc_html__( 'No user specified', 'useradminsimplifier' ) ) );
 		}
 
+		$user_options = array();
+		if ( is_array( $options ) ) {
+			foreach ( $options as $key => $value ) {
+				$user_options[ sanitize_key( $key ) ] = intval( $value );
+			}
+		}
+
 		$uas_options = uas_get_admin_options();
-		$uas_options[ $user ] = is_array( $options ) ? array_map( 'intval', $options ) : array();
+		$uas_options[ $user ] = $user_options;
 		uas_save_admin_options( $uas_options );
 
 		wp_send_json_success( array( 'message' => esc_html__( 'Options saved successfully', 'useradminsimplifier' ) ) );
