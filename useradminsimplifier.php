@@ -335,6 +335,56 @@ License: MIT
 	}
 
 	/**
+	 * The allowed visibility modes.
+	 *
+	 * @return string[] List of valid mode slugs.
+	 */
+	function uas_get_modes() {
+		return array( 'per-user', 'role', 'role-with-overrides' );
+	}
+
+	/**
+	 * Retrieve the active visibility mode.
+	 *
+	 * @return string One of uas_get_modes(); defaults to 'per-user'.
+	 */
+	function uas_get_mode() {
+		$mode = get_option( 'useradminsimplifier_mode', 'per-user' );
+		return in_array( $mode, uas_get_modes(), true ) ? $mode : 'per-user';
+	}
+
+	/**
+	 * Store the active visibility mode.
+	 *
+	 * @param string $mode The mode to store. Invalid values fall back to 'per-user'.
+	 */
+	function uas_save_mode( $mode ) {
+		if ( ! in_array( $mode, uas_get_modes(), true ) ) {
+			$mode = 'per-user';
+		}
+		update_option( 'useradminsimplifier_mode', $mode );
+	}
+
+	/**
+	 * Retrieve the stored per-role options.
+	 *
+	 * @return array Map of role slug => flag map.
+	 */
+	function uas_get_role_options() {
+		$saved = get_option( 'useradminsimplifier_roles' );
+		return is_array( $saved ) ? $saved : array();
+	}
+
+	/**
+	 * Store the per-role options.
+	 *
+	 * @param array $role_options Map of role slug => flag map.
+	 */
+	function uas_save_role_options( $role_options ) {
+		update_option( 'useradminsimplifier_roles', $role_options );
+	}
+
+	/**
 	 * Helper function to clean menu names.
 	 *
 	 * @param  string $menuname The stored menu name.
