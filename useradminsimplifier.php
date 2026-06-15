@@ -678,6 +678,16 @@ License: MIT
 		foreach ( $blogusers as $user ) {
 			$users_data[] = array(
 				'nicename' => $user->user_nicename,
+				'roles'    => array_values( (array) $user->roles ),
+			);
+		}
+
+		// Prepare roles data (slug => display name).
+		$roles_data = array();
+		foreach ( get_editable_roles() as $slug => $details ) {
+			$roles_data[] = array(
+				'slug' => $slug,
+				'name' => isset( $details['name'] ) ? $details['name'] : $slug,
 			);
 		}
 
@@ -716,6 +726,19 @@ License: MIT
 			'dragToReorder'        => esc_html__( 'Drag to reorder', 'useradminsimplifier' ),
 			'moveUp'               => esc_html__( 'Move up', 'useradminsimplifier' ),
 			'moveDown'             => esc_html__( 'Move down', 'useradminsimplifier' ),
+			'modeLabel'            => esc_html__( 'Menu control mode', 'useradminsimplifier' ),
+			'modePerUser'          => esc_html__( 'Per-user only', 'useradminsimplifier' ),
+			'modeRole'             => esc_html__( 'Role-based only', 'useradminsimplifier' ),
+			'modeRoleOverrides'    => esc_html__( 'Role-based with per-user overrides', 'useradminsimplifier' ),
+			'chooseRole'           => esc_html__( 'Choose a role', 'useradminsimplifier' ),
+			'editingRole'          => esc_html__( 'Editing role defaults', 'useradminsimplifier' ),
+			'fromRole'             => esc_html__( '(from role)', 'useradminsimplifier' ),
+			'inherit'              => esc_html__( 'Inherit', 'useradminsimplifier' ),
+			'show'                 => esc_html__( 'Show', 'useradminsimplifier' ),
+			'hide'                 => esc_html__( 'Hide', 'useradminsimplifier' ),
+			'saveRole'             => esc_html__( 'Save Role Settings', 'useradminsimplifier' ),
+			'resetRole'            => esc_html__( 'Reset Role Settings', 'useradminsimplifier' ),
+			'modeSaved'            => esc_html__( 'Mode saved.', 'useradminsimplifier' ),
 		);
 
 		// Enqueue React app
@@ -741,6 +764,9 @@ License: MIT
 				'menuItems'     => $menu_items,
 				'adminBarItems' => $admin_bar_items,
 				'options'       => $uas_options,
+				'roles'         => $roles_data,
+				'roleOptions'   => uas_get_role_options(),
+				'mode'          => uas_get_mode(),
 				'nonce'         => wp_create_nonce( 'uas_nonce' ),
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 				'strings'       => $strings,
