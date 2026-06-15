@@ -34,7 +34,7 @@ jobs:
       run: npx playwright install --with-deps chromium
     
     - name: Run visual regression tests
-      run: npm run test:visual:update
+      run: npm run test:visual
     
     - name: Upload test results
       if: always()
