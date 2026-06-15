@@ -435,6 +435,36 @@ License: MIT
 	}
 
 	/**
+	 * Resolve the effective menu order for a user.
+	 *
+	 * Ordering is a sequence, so it cannot be unioned. Role mode uses the primary
+	 * role's order; override mode prefers the per-user order, falling back to the
+	 * primary role's order.
+	 *
+	 * Copied into tests/test-role-resolution.php - keep in sync.
+	 *
+	 * @param array  $per_user_order     The user's menu-order list (may be empty).
+	 * @param array  $primary_role_order The primary role's menu-order list (may be empty).
+	 * @param string $mode               The active mode.
+	 * @return array The effective ordered list of menu ids.
+	 */
+	function uas_resolve_user_menu_order( $per_user_order, $primary_role_order, $mode ) {
+		$per_user_order     = is_array( $per_user_order ) ? $per_user_order : array();
+		$primary_role_order = is_array( $primary_role_order ) ? $primary_role_order : array();
+
+		if ( 'per-user' === $mode ) {
+			return $per_user_order;
+		}
+
+		if ( 'role' === $mode ) {
+			return $primary_role_order;
+		}
+
+		// role-with-overrides: per-user order wins when set.
+		return ! empty( $per_user_order ) ? $per_user_order : $primary_role_order;
+	}
+
+	/**
 	 * Helper function to clean menu names.
 	 *
 	 * @param  string $menuname The stored menu name.

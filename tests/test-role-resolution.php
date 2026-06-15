@@ -60,6 +60,36 @@ function uas_resolve_user_flags( $per_user_map, $role_maps, $mode ) {
 }
 
 /**
+ * Resolve the effective menu order for a user.
+ *
+ * Ordering is a sequence, so it cannot be unioned. Role mode uses the primary
+ * role's order; override mode prefers the per-user order, falling back to the
+ * primary role's order.
+ *
+ * Copied from useradminsimplifier.php - keep in sync.
+ *
+ * @param array  $per_user_order     The user's menu-order list (may be empty).
+ * @param array  $primary_role_order The primary role's menu-order list (may be empty).
+ * @param string $mode               The active mode.
+ * @return array The effective ordered list of menu ids.
+ */
+function uas_resolve_user_menu_order( $per_user_order, $primary_role_order, $mode ) {
+	$per_user_order     = is_array( $per_user_order ) ? $per_user_order : array();
+	$primary_role_order = is_array( $primary_role_order ) ? $primary_role_order : array();
+
+	if ( 'per-user' === $mode ) {
+		return $per_user_order;
+	}
+
+	if ( 'role' === $mode ) {
+		return $primary_role_order;
+	}
+
+	// role-with-overrides: per-user order wins when set.
+	return ! empty( $per_user_order ) ? $per_user_order : $primary_role_order;
+}
+
+/**
  * Test cases.
  */
 class Test_Role_Resolution {
@@ -114,6 +144,39 @@ class Test_Role_Resolution {
 		);
 	}
 
+	public static function order_cases() {
+		return array(
+			array(
+				'description' => 'per-user mode uses the per-user order',
+				'per_user'    => array( 'a', 'b' ),
+				'role'        => array( 'c', 'd' ),
+				'mode'        => 'per-user',
+				'expected'    => array( 'a', 'b' ),
+			),
+			array(
+				'description' => 'role mode uses the primary role order',
+				'per_user'    => array( 'a', 'b' ),
+				'role'        => array( 'c', 'd' ),
+				'mode'        => 'role',
+				'expected'    => array( 'c', 'd' ),
+			),
+			array(
+				'description' => 'overrides: per-user order wins when set',
+				'per_user'    => array( 'a', 'b' ),
+				'role'        => array( 'c', 'd' ),
+				'mode'        => 'role-with-overrides',
+				'expected'    => array( 'a', 'b' ),
+			),
+			array(
+				'description' => 'overrides: falls back to role order when per-user empty',
+				'per_user'    => array(),
+				'role'        => array( 'c', 'd' ),
+				'mode'        => 'role-with-overrides',
+				'expected'    => array( 'c', 'd' ),
+			),
+		);
+	}
+
 	public static function run_tests() {
 		$passed  = 0;
 		$failed  = 0;
@@ -129,6 +192,18 @@ class Test_Role_Resolution {
 			$results[] = array(
 				'description' => $test['description'],
 				'expected'    => var_export( $expected, true ),
+				'actual'      => var_export( $actual, true ),
+				'passed'      => $status,
+			);
+		}
+
+		foreach ( self::order_cases() as $test ) {
+			$actual = uas_resolve_user_menu_order( $test['per_user'], $test['role'], $test['mode'] );
+			$status = ( $actual === $test['expected'] );
+			$status ? $passed++ : $failed++;
+			$results[] = array(
+				'description' => 'order: ' . $test['description'],
+				'expected'    => var_export( $test['expected'], true ),
 				'actual'      => var_export( $actual, true ),
 				'passed'      => $status,
 			);
