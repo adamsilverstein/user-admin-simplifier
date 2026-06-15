@@ -66,17 +66,22 @@ const App = () => {
    * Handle mode change (persists immediately).
    */
   const handleModeChange = useCallback(async (newMode) => {
+    const prevMode = mode;
     setMode(newMode);
     setMessage({ text: '', type: '' });
     try {
       const data = await postAjax({ action: 'uas_save_mode', mode: newMode });
       if (data.success) {
         setMessage({ text: strings.modeSaved || 'Mode saved.', type: 'success' });
+      } else {
+        setMode(prevMode);
+        setMessage({ text: data.data?.message || strings.saveError || 'Failed to save settings.', type: 'error' });
       }
     } catch (e) {
+      setMode(prevMode);
       setMessage({ text: strings.saveError || 'Failed to save settings.', type: 'error' });
     }
-  }, [postAjax, strings]);
+  }, [mode, postAjax, strings]);
 
   /**
    * Handle user selection change
@@ -257,7 +262,7 @@ const App = () => {
       });
       setMessage(data.success
         ? { text: strings.saveSuccess || 'Settings saved successfully!', type: 'success' }
-        : { text: data.data?.message || strings.saveError, type: 'error' });
+        : { text: data.data?.message || strings.saveError || 'Failed to save settings.', type: 'error' });
     } catch (e) {
       setMessage({ text: strings.saveError || 'Failed to save settings.', type: 'error' });
     } finally {
@@ -271,6 +276,7 @@ const App = () => {
   const handleRoleReset = useCallback(async () => {
     if (!selectedRole) return;
     setIsSaving(true);
+    setMessage({ text: '', type: '' });
     try {
       const data = await postAjax({ action: 'uas_reset_role', role: selectedRole });
       if (data.success) {
