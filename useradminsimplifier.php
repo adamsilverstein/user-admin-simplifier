@@ -148,8 +148,8 @@ License: MIT
 			wp_send_json_error( array( 'message' => esc_html__( 'Permission denied', 'useradminsimplifier' ) ) );
 		}
 
-		$mode = isset( $_POST['mode'] ) ? sanitize_text_field( wp_unslash( $_POST['mode'] ) ) : 'per-user';
-		if ( ! in_array( $mode, uas_get_modes(), true ) ) {
+		$mode = isset( $_POST['mode'] ) ? sanitize_text_field( wp_unslash( $_POST['mode'] ) ) : '';
+		if ( '' === $mode || ! in_array( $mode, uas_get_modes(), true ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid mode', 'useradminsimplifier' ) ) );
 		}
 
@@ -178,6 +178,9 @@ License: MIT
 		if ( null === $options && JSON_ERROR_NONE !== json_last_error() ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid options payload.', 'useradminsimplifier' ) ) );
 		}
+		if ( ! is_array( $options ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid options payload.', 'useradminsimplifier' ) ) );
+		}
 
 		$role_options          = uas_get_role_options();
 		$role_options[ $role ] = uas_sanitize_flag_map( $options );
@@ -198,8 +201,8 @@ License: MIT
 		}
 
 		$role = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : '';
-		if ( '' === $role ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'No role specified', 'useradminsimplifier' ) ) );
+		if ( '' === $role || ! array_key_exists( $role, get_editable_roles() ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid role', 'useradminsimplifier' ) ) );
 		}
 
 		$role_options = uas_get_role_options();
