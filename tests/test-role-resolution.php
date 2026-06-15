@@ -9,6 +9,17 @@
  * @package UserAdminSimplifier
  */
 
+if ( ! function_exists( 'sanitize_key' ) ) {
+	function sanitize_key( $key ) {
+		$sanitized_key = '';
+		if ( is_scalar( $key ) ) {
+			$sanitized_key = strtolower( (string) $key );
+			$sanitized_key = preg_replace( '/[^a-z0-9_\-]/', '', $sanitized_key );
+		}
+		return $sanitized_key;
+	}
+}
+
 /**
  * Resolve the effective hidden-flag map for a user.
  *
@@ -87,6 +98,25 @@ function uas_resolve_user_menu_order( $per_user_order, $primary_role_order, $mod
 
 	// role-with-overrides: per-user order wins when set.
 	return ! empty( $per_user_order ) ? $per_user_order : $primary_role_order;
+}
+
+/**
+ * Whether a menu item id must never be hidden (lockout safeguard).
+ *
+ * The plugin's own settings page and its parent Tools menu must always remain
+ * reachable so an administrator can recover from a config that hides them.
+ *
+ * Copied from useradminsimplifier.php - keep in sync.
+ *
+ * @param string $menu_id The sanitized menu id (item[5] or combined submenu id).
+ * @return bool True if the item is protected.
+ */
+function uas_is_protected_menu_item( $menu_id ) {
+	$protected = array(
+		sanitize_key( 'menu-tools' ),
+		sanitize_key( 'menu-tools' . 'useradminsimplifier/useradminsimplifier.php' ),
+	);
+	return in_array( $menu_id, $protected, true );
 }
 
 /**
@@ -177,6 +207,26 @@ class Test_Role_Resolution {
 		);
 	}
 
+	public static function protected_cases() {
+		return array(
+			array(
+				'description' => 'Tools top-level menu is protected',
+				'menu_id'     => sanitize_key( 'menu-tools' ),
+				'expected'    => true,
+			),
+			array(
+				'description' => 'UAS settings submenu is protected',
+				'menu_id'     => sanitize_key( 'menu-tools' . 'useradminsimplifier/useradminsimplifier.php' ),
+				'expected'    => true,
+			),
+			array(
+				'description' => 'an unrelated menu is not protected',
+				'menu_id'     => sanitize_key( 'menu-posts' ),
+				'expected'    => false,
+			),
+		);
+	}
+
 	public static function run_tests() {
 		$passed  = 0;
 		$failed  = 0;
@@ -203,6 +253,18 @@ class Test_Role_Resolution {
 			$status ? $passed++ : $failed++;
 			$results[] = array(
 				'description' => 'order: ' . $test['description'],
+				'expected'    => var_export( $test['expected'], true ),
+				'actual'      => var_export( $actual, true ),
+				'passed'      => $status,
+			);
+		}
+
+		foreach ( self::protected_cases() as $test ) {
+			$actual = uas_is_protected_menu_item( $test['menu_id'] );
+			$status = ( $actual === $test['expected'] );
+			$status ? $passed++ : $failed++;
+			$results[] = array(
+				'description' => 'protected: ' . $test['description'],
 				'expected'    => var_export( $test['expected'], true ),
 				'actual'      => var_export( $actual, true ),
 				'passed'      => $status,

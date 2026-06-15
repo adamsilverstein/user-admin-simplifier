@@ -465,6 +465,25 @@ License: MIT
 	}
 
 	/**
+	 * Whether a menu item id must never be hidden (lockout safeguard).
+	 *
+	 * The plugin's own settings page and its parent Tools menu must always remain
+	 * reachable so an administrator can recover from a config that hides them.
+	 *
+	 * Copied from useradminsimplifier.php - keep in sync.
+	 *
+	 * @param string $menu_id The sanitized menu id (item[5] or combined submenu id).
+	 * @return bool True if the item is protected.
+	 */
+	function uas_is_protected_menu_item( $menu_id ) {
+		$protected = array(
+			sanitize_key( 'menu-tools' ),
+			sanitize_key( 'menu-tools' . 'useradminsimplifier/useradminsimplifier.php' ),
+		);
+		return in_array( $menu_id, $protected, true );
+	}
+
+	/**
 	 * Helper function to clean menu names.
 	 *
 	 * @param  string $menuname The stored menu name.
