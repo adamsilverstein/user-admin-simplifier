@@ -24,6 +24,9 @@ License: MIT
 		// Register AJAX actions for React UI
 		add_action( 'wp_ajax_uas_save_options', 'uas_ajax_save_options' );
 		add_action( 'wp_ajax_uas_reset_user', 'uas_ajax_reset_user' );
+		add_action( 'wp_ajax_uas_save_mode', 'uas_ajax_save_mode' );
+		add_action( 'wp_ajax_uas_save_role', 'uas_ajax_save_role' );
+		add_action( 'wp_ajax_uas_reset_role', 'uas_ajax_reset_role' );
 
 		// Remove the admin bar?
 		$uas_flags = uas_get_effective_flags_for_current_user();
@@ -67,28 +70,7 @@ License: MIT
 			wp_send_json_error( array( 'message' => esc_html__( 'No user specified', 'useradminsimplifier' ) ) );
 		}
 
-		// The 'menu-order' key holds a list of menu ids rather than an int flag,
-		// so pull it out before the int flags are sanitized.
-		$menu_order = array();
-		if ( is_array( $options ) && isset( $options['menu-order'] ) ) {
-			$menu_order = uas_sanitize_menu_order( $options['menu-order'] );
-			unset( $options['menu-order'] );
-		}
-
-		$user_options = array();
-		if ( is_array( $options ) ) {
-			foreach ( $options as $key => $value ) {
-				$clean_key = sanitize_key( $key );
-				if ( '' === $clean_key ) {
-					continue;
-				}
-				$user_options[ $clean_key ] = intval( $value );
-			}
-		}
-
-		if ( ! empty( $menu_order ) ) {
-			$user_options['menu-order'] = $menu_order;
-		}
+		$user_options = uas_sanitize_flag_map( $options );
 
 		$uas_options = uas_get_admin_options();
 		$uas_options[ $user ] = $user_options;
@@ -122,6 +104,109 @@ License: MIT
 		uas_save_admin_options( $uas_options );
 
 		wp_send_json_success( array( 'message' => esc_html__( 'User settings reset successfully', 'useradminsimplifier' ) ) );
+	}
+
+	/**
+	 * Sanitize a decoded flag map (menuId => int, with a menu-order list).
+	 *
+	 * @param array $options Raw decoded options.
+	 * @return array Sanitized flag map.
+	 */
+	function uas_sanitize_flag_map( $options ) {
+		$menu_order = array();
+		if ( is_array( $options ) && isset( $options['menu-order'] ) ) {
+			$menu_order = uas_sanitize_menu_order( $options['menu-order'] );
+			unset( $options['menu-order'] );
+		}
+
+		$clean = array();
+		if ( is_array( $options ) ) {
+			foreach ( $options as $key => $value ) {
+				$clean_key = sanitize_key( $key );
+				if ( '' === $clean_key ) {
+					continue;
+				}
+				$clean[ $clean_key ] = intval( $value );
+			}
+		}
+
+		if ( ! empty( $menu_order ) ) {
+			$clean['menu-order'] = $menu_order;
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * AJAX handler for saving the active visibility mode.
+	 */
+	function uas_ajax_save_mode() {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'uas_nonce' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid nonce', 'useradminsimplifier' ) ) );
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Permission denied', 'useradminsimplifier' ) ) );
+		}
+
+		$mode = isset( $_POST['mode'] ) ? sanitize_text_field( wp_unslash( $_POST['mode'] ) ) : 'per-user';
+		if ( ! in_array( $mode, uas_get_modes(), true ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid mode', 'useradminsimplifier' ) ) );
+		}
+
+		uas_save_mode( $mode );
+		wp_send_json_success( array( 'message' => esc_html__( 'Mode saved successfully', 'useradminsimplifier' ) ) );
+	}
+
+	/**
+	 * AJAX handler for saving a single role's options.
+	 */
+	function uas_ajax_save_role() {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'uas_nonce' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid nonce', 'useradminsimplifier' ) ) );
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Permission denied', 'useradminsimplifier' ) ) );
+		}
+
+		$role = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : '';
+		if ( '' === $role || ! array_key_exists( $role, get_editable_roles() ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid role', 'useradminsimplifier' ) ) );
+		}
+
+		$options_json = isset( $_POST['options'] ) ? wp_unslash( $_POST['options'] ) : '{}';
+		$options      = json_decode( $options_json, true );
+		if ( null === $options && JSON_ERROR_NONE !== json_last_error() ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid options payload.', 'useradminsimplifier' ) ) );
+		}
+
+		$role_options          = uas_get_role_options();
+		$role_options[ $role ] = uas_sanitize_flag_map( $options );
+		uas_save_role_options( $role_options );
+
+		wp_send_json_success( array( 'message' => esc_html__( 'Role settings saved successfully', 'useradminsimplifier' ) ) );
+	}
+
+	/**
+	 * AJAX handler for resetting a single role's options.
+	 */
+	function uas_ajax_reset_role() {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'uas_nonce' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid nonce', 'useradminsimplifier' ) ) );
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Permission denied', 'useradminsimplifier' ) ) );
+		}
+
+		$role = isset( $_POST['role'] ) ? sanitize_key( wp_unslash( $_POST['role'] ) ) : '';
+		if ( '' === $role ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'No role specified', 'useradminsimplifier' ) ) );
+		}
+
+		$role_options = uas_get_role_options();
+		unset( $role_options[ $role ] );
+		uas_save_role_options( $role_options );
+
+		wp_send_json_success( array( 'message' => esc_html__( 'Role settings reset successfully', 'useradminsimplifier' ) ) );
 	}
 
 	/**
