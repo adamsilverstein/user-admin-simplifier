@@ -26,11 +26,10 @@ License: MIT
 		add_action( 'wp_ajax_uas_reset_user', 'uas_ajax_reset_user' );
 
 		// Remove the admin bar?
-		$uas_options = uas_get_admin_options();
+		$uas_flags = uas_get_effective_flags_for_current_user();
 		if (
-			isset( $uas_options[ $current_user->user_nicename ] ) &&
-			isset( $uas_options[ $current_user->user_nicename ][ 'disable-admin-bar' ] ) &&
-			1 === $uas_options[ $current_user->user_nicename ][ 'disable-admin-bar' ]
+			isset( $uas_flags['disable-admin-bar'] ) &&
+			1 === (int) $uas_flags['disable-admin-bar']
 		) {
 			// Hide on the admin side where its not possible to disable.
 			add_action( 'admin_head', 'uas_hide_admin_bar' );
@@ -150,14 +149,13 @@ License: MIT
 
 		// Store the menubar nodes (menu items) in a global.
 		$wp_admin_bar_menu_items = $wp_admin_bar->get_nodes();
-		$uas_options = uas_get_admin_options();
+		$uas_flags = uas_get_effective_flags_for_current_user();
 
 		// Remove nodes for the current user.
 		foreach( $wp_admin_bar_menu_items as $menu_item ) {
 			if (
-				isset( $uas_options[ $current_user->user_nicename ] ) &&
-				isset( $uas_options[ $current_user->user_nicename ][ $menu_item->id ] ) &&
-				1 === $uas_options[ $current_user->user_nicename ][ $menu_item->id ]
+				isset( $uas_flags[ $menu_item->id ] ) &&
+				1 === (int) $uas_flags[ $menu_item->id ]
 			) {
 				$wp_admin_bar->remove_node( $menu_item->id );
 				if ( 'user-actions' === $menu_item->id ) {
@@ -182,22 +180,27 @@ License: MIT
 
 		$storedmenu = $menu; //store the original menu
 		$storedsubmenu = $submenu; //store the original menu
-		$uas_options = uas_get_admin_options();
+		$uas_flags = uas_get_effective_flags_for_current_user();
 		$newmenu = array();
 		if ( ! isset( $menu ) )
 			return false;
 		//rebuild menu based on saved options
 		foreach ( $menu as $menuitem ) {
-			if ( isset( $menuitem[5] ) && isset( $uas_options[ $current_user->user_nicename ][ sanitize_key( $menuitem[5] )  ] ) &&
-					1 == $uas_options[ $current_user->user_nicename ][ sanitize_key( $menuitem[5] )  ] ) {
+			if ( ! isset( $menuitem[5] ) ) {
+				continue;
+			}
+			$top_id = sanitize_key( $menuitem[5] );
+			if ( isset( $uas_flags[ $top_id ] ) && 1 === (int) $uas_flags[ $top_id ]
+					&& ! uas_is_protected_menu_item( $top_id ) ) {
 				remove_menu_page( $menuitem[2] );
 			} else {
 				// lets check the submenus
 				if ( isset ( $storedsubmenu[ $menuitem[2] ] ) ) {
 					foreach ( $storedsubmenu[ $menuitem[2] ] as $subsub ) {
 						$combinedname = sanitize_key( $menuitem[5] . $subsub[2] );
-						if  ( isset ( $subsub[2] ) && isset( $uas_options[ $current_user->user_nicename ][ $combinedname ] ) &&
-							1 == $uas_options[ $current_user->user_nicename ][ $combinedname ] ) {
+						if  ( isset ( $subsub[2] ) && isset( $uas_flags[ $combinedname ] ) &&
+							1 === (int) $uas_flags[ $combinedname ]
+							&& ! uas_is_protected_menu_item( $combinedname ) ) {
 							remove_submenu_page( $menuitem[2], $subsub[2] );
 						}
 					}
@@ -205,12 +208,10 @@ License: MIT
 			}
 		}
 
-		// Apply any saved custom menu order for this user.
-		if ( isset( $uas_options[ $current_user->user_nicename ]['menu-order'] ) ) {
-			$saved_order = uas_sanitize_menu_order( $uas_options[ $current_user->user_nicename ]['menu-order'] );
-			if ( ! empty( $saved_order ) ) {
-				$menu = uas_apply_menu_order( $menu, $saved_order );
-			}
+		// Apply the effective custom menu order for this user.
+		$saved_order = uas_get_effective_menu_order_for_current_user();
+		if ( ! empty( $saved_order ) ) {
+			$menu = uas_apply_menu_order( $menu, $saved_order );
 		}
 	}
 
@@ -481,6 +482,74 @@ License: MIT
 			sanitize_key( 'menu-tools' . 'useradminsimplifier/useradminsimplifier.php' ),
 		);
 		return in_array( $menu_id, $protected, true );
+	}
+
+	/**
+	 * Get the flag maps for each of a user's roles, plus the primary role's order.
+	 *
+	 * @param WP_User $user The user object.
+	 * @return array {
+	 *     @type array   $maps          List of role flag maps.
+	 *     @type array   $primary_order The primary role's menu-order list.
+	 * }
+	 */
+	function uas_get_user_role_maps( $user ) {
+		$role_options = uas_get_role_options();
+		$maps         = array();
+		$primary_order = array();
+
+		$roles = ( $user instanceof WP_User ) ? (array) $user->roles : array();
+		foreach ( $roles as $index => $role_slug ) {
+			if ( ! isset( $role_options[ $role_slug ] ) || ! is_array( $role_options[ $role_slug ] ) ) {
+				continue;
+			}
+			$maps[] = $role_options[ $role_slug ];
+			if ( 0 === $index && isset( $role_options[ $role_slug ]['menu-order'] ) ) {
+				$primary_order = uas_sanitize_menu_order( $role_options[ $role_slug ]['menu-order'] );
+			}
+		}
+
+		return array(
+			'maps'          => $maps,
+			'primary_order' => $primary_order,
+		);
+	}
+
+	/**
+	 * Resolve the effective hidden-flag map for the current user.
+	 *
+	 * @return array Map of menuId => 0|1.
+	 */
+	function uas_get_effective_flags_for_current_user() {
+		global $current_user;
+
+		$mode        = uas_get_mode();
+		$uas_options = uas_get_admin_options();
+		$per_user    = isset( $uas_options[ $current_user->user_nicename ] )
+			? $uas_options[ $current_user->user_nicename ]
+			: array();
+		$role_data   = uas_get_user_role_maps( $current_user );
+
+		return uas_resolve_user_flags( $per_user, $role_data['maps'], $mode );
+	}
+
+	/**
+	 * Resolve the effective menu order for the current user.
+	 *
+	 * @return array Ordered list of menu ids (may be empty).
+	 */
+	function uas_get_effective_menu_order_for_current_user() {
+		global $current_user;
+
+		$mode        = uas_get_mode();
+		$uas_options = uas_get_admin_options();
+		$per_user_order = array();
+		if ( isset( $uas_options[ $current_user->user_nicename ]['menu-order'] ) ) {
+			$per_user_order = uas_sanitize_menu_order( $uas_options[ $current_user->user_nicename ]['menu-order'] );
+		}
+		$role_data = uas_get_user_role_maps( $current_user );
+
+		return uas_resolve_user_menu_order( $per_user_order, $role_data['primary_order'], $mode );
 	}
 
 	/**
