@@ -19,7 +19,7 @@ Lets any Administrator simplify the WordPress Admin interface, on a per-user bas
 User Admin Simplifier offers three menu control modes:
 
 * **Per-user only** - the default mode. Configure menu, submenu, and admin bar visibility for each individual user. This is the original behavior and is unchanged.
-* **Role-based only** - configure menu, submenu, and admin bar visibility (and menu order) once per WordPress role. Every user inherits the settings for their role.
+* **Role-based only** - configure menu, submenu, and admin bar visibility (and menu order) once per WordPress role. Every user inherits the settings for their role. Users with multiple roles get the union of all their roles' settings for visibility, while menu order comes from the primary role only.
 * **Role-based with per-user overrides** - applies the role defaults, but lets you override each menu item per user with an Inherit / Show / Hide control.
 
 Existing per-user configurations are preserved. Existing installs see no change unless an Administrator switches modes. Regardless of mode, the User Admin Simplifier settings page (under Tools) always remains accessible to Administrators, so you can never lock yourself out.

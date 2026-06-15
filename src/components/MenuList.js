@@ -1,29 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-
-/**
- * TriStateControl
- * Renders Inherit / Show / Hide radios for override mode. `value` is one of
- * 'inherit' | 'show' | 'hide'. onChange receives the new value.
- */
-const TriStateControl = ({ id, label, value, onChange, strings }) => (
-  <span className="uas-tristate" role="radiogroup" aria-label={label}>
-    {['inherit', 'show', 'hide'].map((opt) => (
-      <label key={opt} className="uas-tristate-option">
-        <input
-          type="radio"
-          name={`tristate-${id}`}
-          checked={value === opt}
-          onChange={() => onChange(opt)}
-        />
-        {opt === 'inherit'
-          ? (strings.inherit || 'Inherit')
-          : opt === 'show'
-          ? (strings.show || 'Show')
-          : (strings.hide || 'Hide')}
-      </label>
-    ))}
-  </span>
-);
+import TriStateControl from './TriStateControl';
 
 /**
  * MenuItem component
@@ -138,7 +114,7 @@ const MenuItem = ({
           <span className="uas-tristate-row">
             <span className="uas-tristate-name">{item.name}</span>
             <TriStateControl
-              id={menuId}
+              groupName={`menu-${menuId}`}
               label={item.name}
               value={triValue}
               onChange={(v) => onTriToggle(menuId, v)}
@@ -179,7 +155,7 @@ const MenuItem = ({
                   <span className="uas-tristate-row">
                     <span className="uas-tristate-name">{submenu.name}</span>
                     <TriStateControl
-                      id={submenuId}
+                      groupName={`menu-${submenuId}`}
                       label={submenu.name}
                       value={subTriValue}
                       onChange={(v) => onTriToggle(submenuId, v)}

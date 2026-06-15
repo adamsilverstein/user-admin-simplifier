@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import UserSelector from './components/UserSelector';
 import MenuList from './components/MenuList';
 import AdminBarMenu from './components/AdminBarMenu';
@@ -30,6 +30,7 @@ const App = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [mode, setMode] = useState(initialMode);
+  const modeRequestIdRef = useRef(0);
   const [selectedRole, setSelectedRole] = useState('');
   const [roleOpts, setRoleOpts] = useState(roleOptions);
 
@@ -66,11 +67,13 @@ const App = () => {
    * Handle mode change (persists immediately).
    */
   const handleModeChange = useCallback(async (newMode) => {
+    const requestId = ++modeRequestIdRef.current;
     const prevMode = mode;
     setMode(newMode);
     setMessage({ text: '', type: '' });
     try {
       const data = await postAjax({ action: 'uas_save_mode', mode: newMode });
+      if (requestId !== modeRequestIdRef.current) return;
       if (data.success) {
         setMessage({ text: strings.modeSaved || 'Mode saved.', type: 'success' });
       } else {
@@ -78,6 +81,7 @@ const App = () => {
         setMessage({ text: data.data?.message || strings.saveError || 'Failed to save settings.', type: 'error' });
       }
     } catch (e) {
+      if (requestId !== modeRequestIdRef.current) return;
       setMode(prevMode);
       setMessage({ text: strings.saveError || 'Failed to save settings.', type: 'error' });
     }
@@ -282,6 +286,8 @@ const App = () => {
       if (data.success) {
         setRoleOpts(prev => ({ ...prev, [selectedRole]: {} }));
         setMessage({ text: strings.resetSuccess || 'Settings reset!', type: 'success' });
+      } else {
+        setMessage({ text: data.data?.message || strings.resetError || 'Failed to reset.', type: 'error' });
       }
     } catch (e) {
       setMessage({ text: strings.resetError || 'Failed to reset.', type: 'error' });

@@ -1,29 +1,5 @@
 import React, { useState, useMemo } from 'react';
-
-/**
- * TriStateControl
- * Renders Inherit / Show / Hide radios for override mode. `value` is one of
- * 'inherit' | 'show' | 'hide'. onChange receives the new value.
- */
-const TriStateControl = ({ id, label, value, onChange, strings }) => (
-  <span className="uas-tristate" role="radiogroup" aria-label={label}>
-    {['inherit', 'show', 'hide'].map((opt) => (
-      <label key={opt} className="uas-tristate-option">
-        <input
-          type="radio"
-          name={`tristate-${id}`}
-          checked={value === opt}
-          onChange={() => onChange(opt)}
-        />
-        {opt === 'inherit'
-          ? (strings.inherit || 'Inherit')
-          : opt === 'show'
-          ? (strings.show || 'Show')
-          : (strings.hide || 'Hide')}
-      </label>
-    ))}
-  </span>
-);
+import TriStateControl from './TriStateControl';
 
 /**
  * AdminBarMenuItem component
@@ -54,7 +30,7 @@ const AdminBarMenuItem = ({ item, userOptions, onToggle, rowIndex, triState, onT
           <span className="uas-tristate-row">
             <span className="uas-tristate-name">{item.title}</span>
             <TriStateControl
-              id={menuId}
+              groupName={`adminbar-${menuId}`}
               label={item.title}
               value={triValue}
               onChange={(v) => onTriToggle(menuId, v)}
@@ -99,7 +75,7 @@ const AdminBarMenuItem = ({ item, userOptions, onToggle, rowIndex, triState, onT
                   <span className="uas-tristate-row">
                     <span className="uas-tristate-name">{child.title}</span>
                     <TriStateControl
-                      id={childId}
+                      groupName={`adminbar-${childId}`}
                       label={child.title}
                       value={childTriValue}
                       onChange={(v) => onTriToggle(childId, v)}
