@@ -5,8 +5,8 @@ import React, { useState, useMemo, useCallback } from 'react';
  * Renders Inherit / Show / Hide radios for override mode. `value` is one of
  * 'inherit' | 'show' | 'hide'. onChange receives the new value.
  */
-const TriStateControl = ({ id, value, onChange, strings }) => (
-  <span className="uas-tristate" role="radiogroup">
+const TriStateControl = ({ id, label, value, onChange, strings }) => (
+  <span className="uas-tristate" role="radiogroup" aria-label={label}>
     {['inherit', 'show', 'hide'].map((opt) => (
       <label key={opt} className="uas-tristate-option">
         <input
@@ -139,6 +139,7 @@ const MenuItem = ({
             <span className="uas-tristate-name">{item.name}</span>
             <TriStateControl
               id={menuId}
+              label={item.name}
               value={triValue}
               onChange={(v) => onTriToggle(menuId, v)}
               strings={strings}
@@ -179,6 +180,7 @@ const MenuItem = ({
                     <span className="uas-tristate-name">{submenu.name}</span>
                     <TriStateControl
                       id={submenuId}
+                      label={submenu.name}
                       value={subTriValue}
                       onChange={(v) => onTriToggle(submenuId, v)}
                       strings={strings}
