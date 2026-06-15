@@ -21,12 +21,12 @@ Three WordPress options:
 | Option | Status | Shape |
 | --- | --- | --- |
 | `useradminsimplifier_options` | unchanged | `user_nicename => { menuId: 0\|1, "menu-order": [...], "disable-admin-bar": 0\|1 }` |
-| `useradminsimplifier_roles` | new | `role_slug => { menuId: 1, "disable-admin-bar": 1 }` (hidden flags only) |
+| `useradminsimplifier_roles` | new | `role_slug => { menuId: 1, "disable-admin-bar": 1, "menu-order": [...] }` |
 | `useradminsimplifier_mode` | new | `"per-user"` (default) \| `"role"` \| `"role-with-overrides"` |
 
-Menu reordering (`menu-order`) remains a per-user setting and is applied in all
-modes. Role config carries show/hide flags only (top menus, submenus, admin-bar
-items, and `disable-admin-bar`).
+Role config carries show/hide flags (top menus, submenus, admin-bar items,
+`disable-admin-bar`) and an optional `menu-order` list, mirroring the per-user
+shape.
 
 ## Resolution
 
@@ -57,6 +57,20 @@ and calls the resolver. The three existing consumers are refactored to use it:
 `disable-admin-bar` is just another key in the map, so it resolves through the
 same precedence rules.
 
+### Menu order resolution
+
+Ordering is a sequence, not a set, so it cannot use the union rule. A separate
+helper `uas_resolve_user_menu_order( $per_user_order, $primary_role_order, $mode )`
+returns the effective order list:
+
+- **per-user**: the per-user order (today's behavior).
+- **role**: the order from the user's **primary role** (WP's first role). Other
+  roles do not contribute ordering.
+- **role-with-overrides**: the per-user order if the user has set one, otherwise
+  the primary role's order.
+
+The resolved order is then fed to the existing `uas_apply_menu_order()`.
+
 ### Lockout safeguard
 
 Because the `administrator` role is shared by every admin, hiding the Tools menu
@@ -83,7 +97,9 @@ checks and the same per-key `sanitize_key` / `intval` sanitizer:
 - **Subject selector** — shows the user dropdown (per-user and overrides modes)
   and/or a new role dropdown (role and overrides modes). Roles come from
   `get_editable_roles()` (all editable roles, including administrator).
-- **Reuse** `MenuList` and `AdminBarMenu` for both user and role editing.
+- **Reuse** `MenuList` and `AdminBarMenu` for both user and role editing. The
+  role editor wires `MenuList`'s existing `onReorder` into the role's
+  `menu-order`, giving per-role drag reordering with no new component.
 - **Override mode** adds an optional tri-state control (Inherit / Show / Hide)
   to `MenuList` / `AdminBarMenu` via props (`roleDefaults`, `triState`), with a
   "from role" indicator. "Inherit" stores no key.
@@ -103,10 +119,11 @@ copy-the-pure-function test style, with a `sanitize_key` stub), added to the
 - role-with-overrides: explicit user `1`/`0` overrides the role default.
 - role-with-overrides: absent user key inherits the role value.
 - `disable-admin-bar` resolves through the same precedence.
+- menu order: role mode uses the primary role's order; override mode prefers the
+  per-user order and falls back to the primary role's order.
 
 The lockout safeguard helper (`uas_is_protected_menu_item()`) is also covered.
 
 ## Out of scope (noted, not built)
 
-- Per-role menu reordering (per-user reordering is preserved).
 - The optional "import per-user settings into role defaults" migration helper.
