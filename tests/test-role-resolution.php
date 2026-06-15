@@ -25,8 +25,8 @@ if ( ! function_exists( 'sanitize_key' ) ) {
  *
  * Copied from useradminsimplifier.php - keep in sync.
  *
- * @param array  $per_user_map Map of menuId => 0|1 for the user.
- * @param array  $role_maps    List of role flag maps (each menuId => 1 hidden).
+ * @param mixed  $per_user_map Map of menuId => 0|1 for the user.
+ * @param mixed  $role_maps    List of role flag maps (each menuId => 1 hidden).
  * @param string $mode         One of 'per-user', 'role', 'role-with-overrides'.
  * @return array Effective map of menuId => 0|1.
  */
@@ -79,8 +79,8 @@ function uas_resolve_user_flags( $per_user_map, $role_maps, $mode ) {
  *
  * Copied from useradminsimplifier.php - keep in sync.
  *
- * @param array  $per_user_order     The user's menu-order list (may be empty).
- * @param array  $primary_role_order The primary role's menu-order list (may be empty).
+ * @param mixed  $per_user_order     The user's menu-order list (may be empty).
+ * @param mixed  $primary_role_order The primary role's menu-order list (may be empty).
  * @param string $mode               The active mode.
  * @return array The effective ordered list of menu ids.
  */
