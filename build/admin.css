@@ -590,3 +590,56 @@
   }
 }
 
+/* Role-based menu control: mode selector + tri-state overrides */
+.uas-mode-selector {
+  margin: 1em 0;
+  padding: 1em 1.25em;
+  border: 1px solid var(--uas-border);
+  border-radius: var(--uas-radius);
+  background: var(--uas-surface);
+}
+
+.uas-mode-selector legend {
+  font-weight: 600;
+  padding: 0 0.5em;
+  color: var(--uas-text);
+}
+
+.uas-mode-option {
+  display: block;
+  margin: 0.35em 0;
+  color: var(--uas-text);
+}
+
+.uas-mode-option input {
+  margin-right: 0.5em;
+}
+
+.uas-role-selector-wrapper {
+  margin: 0.5em 0 1em;
+}
+
+.uas-tristate-row {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  flex-wrap: wrap;
+}
+
+.uas-tristate-name {
+  min-width: 14em;
+  display: inline-block;
+}
+
+.uas-tristate {
+  display: inline-flex;
+  gap: 0.75em;
+}
+
+.uas-tristate-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  color: var(--uas-text-secondary);
+}
+
