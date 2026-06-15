@@ -385,6 +385,56 @@ License: MIT
 	}
 
 	/**
+	 * Resolve the effective hidden-flag map for a user.
+	 *
+	 * Copied into tests/test-role-resolution.php - keep in sync.
+	 *
+	 * @param array  $per_user_map Map of menuId => 0|1 for the user.
+	 * @param array  $role_maps    List of role flag maps (each menuId => 1 hidden).
+	 * @param string $mode         One of 'per-user', 'role', 'role-with-overrides'.
+	 * @return array Effective map of menuId => 0|1.
+	 */
+	function uas_resolve_user_flags( $per_user_map, $role_maps, $mode ) {
+		$per_user_map = is_array( $per_user_map ) ? $per_user_map : array();
+		$role_maps    = is_array( $role_maps ) ? $role_maps : array();
+
+		if ( 'per-user' === $mode ) {
+			return $per_user_map;
+		}
+
+		// Union of all role maps: hidden (1) if any role hides it.
+		$role_union = array();
+		foreach ( $role_maps as $role_map ) {
+			if ( ! is_array( $role_map ) ) {
+				continue;
+			}
+			foreach ( $role_map as $key => $value ) {
+				if ( 'menu-order' === $key ) {
+					continue;
+				}
+				if ( 1 === (int) $value ) {
+					$role_union[ $key ] = 1;
+				}
+			}
+		}
+
+		if ( 'role' === $mode ) {
+			return $role_union;
+		}
+
+		// role-with-overrides: per-user explicit keys win over the role union.
+		$resolved = $role_union;
+		foreach ( $per_user_map as $key => $value ) {
+			if ( 'menu-order' === $key ) {
+				continue;
+			}
+			$resolved[ $key ] = (int) $value;
+		}
+
+		return $resolved;
+	}
+
+	/**
 	 * Helper function to clean menu names.
 	 *
 	 * @param  string $menuname The stored menu name.
