@@ -559,7 +559,8 @@ License: MIT
 	 * The plugin's own settings page and its parent Tools menu must always remain
 	 * reachable so an administrator can recover from a config that hides them.
 	 *
-	 * Copied from useradminsimplifier.php - keep in sync.
+	 * The test suite keeps a copy of this helper in sync (see
+	 * tests/test-role-resolution.php) for standalone resolver testing.
 	 *
 	 * @param string $menu_id The sanitized menu id (item[5] or combined submenu id).
 	 * @return bool True if the item is protected.
@@ -736,6 +737,8 @@ License: MIT
 			'inherit'              => esc_html__( 'Inherit', 'useradminsimplifier' ),
 			'show'                 => esc_html__( 'Show', 'useradminsimplifier' ),
 			'hide'                 => esc_html__( 'Hide', 'useradminsimplifier' ),
+			'adminBarEnabled'      => esc_html__( 'Enabled', 'useradminsimplifier' ),
+			'adminBarDisabled'     => esc_html__( 'Disabled', 'useradminsimplifier' ),
 			'saveRole'             => esc_html__( 'Save Role Settings', 'useradminsimplifier' ),
 			'resetRole'            => esc_html__( 'Reset Role Settings', 'useradminsimplifier' ),
 			'modeSaved'            => esc_html__( 'Mode saved.', 'useradminsimplifier' ),
