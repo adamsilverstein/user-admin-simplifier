@@ -272,6 +272,12 @@ License: MIT
 		$newmenu = array();
 		if ( ! isset( $menu ) )
 			return false;
+
+		// The lockout safeguard only matters for users who can reach the plugin's
+		// settings page (it lives under Tools and requires manage_options). Other
+		// roles cannot open it, so the Tools menu is hideable for them like any other.
+		$protect_settings = current_user_can( 'manage_options' );
+
 		//rebuild menu based on saved options
 		foreach ( $menu as $menuitem ) {
 			if ( ! isset( $menuitem[5] ) ) {
@@ -279,7 +285,7 @@ License: MIT
 			}
 			$top_id = sanitize_key( $menuitem[5] );
 			if ( isset( $uas_flags[ $top_id ] ) && 1 === (int) $uas_flags[ $top_id ]
-					&& ! uas_is_protected_menu_item( $top_id ) ) {
+					&& ! ( $protect_settings && uas_is_protected_menu_item( $top_id ) ) ) {
 				remove_menu_page( $menuitem[2] );
 			} else {
 				// lets check the submenus
@@ -288,7 +294,7 @@ License: MIT
 						$combinedname = sanitize_key( $menuitem[5] . $subsub[2] );
 						if  ( isset ( $subsub[2] ) && isset( $uas_flags[ $combinedname ] ) &&
 							1 === (int) $uas_flags[ $combinedname ]
-							&& ! uas_is_protected_menu_item( $combinedname ) ) {
+							&& ! ( $protect_settings && uas_is_protected_menu_item( $combinedname ) ) ) {
 							remove_submenu_page( $menuitem[2], $subsub[2] );
 						}
 					}
