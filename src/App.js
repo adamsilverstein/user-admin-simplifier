@@ -5,6 +5,7 @@ import AdminBarMenu from './components/AdminBarMenu';
 import SaveButton from './components/SaveButton';
 import ModeSelector from './components/ModeSelector';
 import RoleSelector from './components/RoleSelector';
+import TriStateControl from './components/TriStateControl';
 
 /**
  * Main App component for User Admin Simplifier
@@ -403,14 +404,39 @@ const App = () => {
 
           <h3>{strings.disableAdminBar || 'Disable the admin bar'}:</h3>
           <div className="menu-item uas-admin-bar-toggle">
-            <label>
-              <input
-                type="checkbox"
-                checked={currentUserOptions['disable-admin-bar'] === 1}
-                onChange={(e) => handleMenuToggle('disable-admin-bar', e.target.checked)}
-              />
-              {strings.disableAdminBarLabel || 'Completely disable the admin bar for this user.'}
-            </label>
+            {overrideMode ? (
+              <span className="uas-tristate-row">
+                <span className="uas-tristate-name">
+                  {strings.disableAdminBarLabel || 'Completely disable the admin bar for this user.'}
+                </span>
+                <TriStateControl
+                  groupName="disable-admin-bar"
+                  label={strings.disableAdminBarLabel || 'Completely disable the admin bar for this user.'}
+                  value={
+                    currentUserOptions['disable-admin-bar'] === 1
+                      ? 'hide'
+                      : currentUserOptions['disable-admin-bar'] === 0
+                      ? 'show'
+                      : 'inherit'
+                  }
+                  onChange={(v) => handleUserTriToggle('disable-admin-bar', v)}
+                  strings={strings}
+                  labels={{
+                    show: strings.adminBarEnabled || 'Enabled',
+                    hide: strings.adminBarDisabled || 'Disabled',
+                  }}
+                />
+              </span>
+            ) : (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={currentUserOptions['disable-admin-bar'] === 1}
+                  onChange={(e) => handleMenuToggle('disable-admin-bar', e.target.checked)}
+                />
+                {strings.disableAdminBarLabel || 'Completely disable the admin bar for this user.'}
+              </label>
+            )}
           </div>
 
           <h3>{strings.disableAdminBarMenus || 'Disable admin bar menus/submenus'}:</h3>
