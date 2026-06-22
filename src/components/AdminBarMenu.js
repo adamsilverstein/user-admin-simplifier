@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
+import TriStateControl from './TriStateControl';
 
 /**
  * AdminBarMenuItem component
  * Renders a single admin bar menu item with optional children
  */
-const AdminBarMenuItem = ({ item, userOptions, onToggle, rowIndex, strings }) => {
+const AdminBarMenuItem = ({ item, userOptions, onToggle, rowIndex, triState, onTriToggle, strings }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const menuId = item.id;
   const isChecked = userOptions[menuId] === 1;
+  const triValue =
+    userOptions[menuId] === 1 ? 'hide' : userOptions[menuId] === 0 ? 'show' : 'inherit';
   const hasChildren = item.children && item.children.length > 0;
 
   const handleToggle = (e) => {
@@ -23,14 +26,27 @@ const AdminBarMenuItem = ({ item, userOptions, onToggle, rowIndex, strings }) =>
   return (
     <>
       <p className={rowClass}>
-        <label>
-          <input 
-            type="checkbox" 
-            checked={isChecked}
-            onChange={handleToggle}
-          />
-          {item.title}
-        </label>
+        {triState ? (
+          <span className="uas-tristate-row">
+            <span className="uas-tristate-name">{item.title}</span>
+            <TriStateControl
+              groupName={`adminbar-${menuId}`}
+              label={item.title}
+              value={triValue}
+              onChange={(v) => onTriToggle(menuId, v)}
+              strings={strings}
+            />
+          </span>
+        ) : (
+          <label>
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={handleToggle}
+            />
+            {item.title}
+          </label>
+        )}
         {hasChildren && (
           <button
             type="button"
@@ -49,18 +65,33 @@ const AdminBarMenuItem = ({ item, userOptions, onToggle, rowIndex, strings }) =>
           {item.children.map((child, subIndex) => {
             const childId = child.id;
             const isChildChecked = userOptions[childId] === 1;
+            const childTriValue =
+              userOptions[childId] === 1 ? 'hide' : userOptions[childId] === 0 ? 'show' : 'inherit';
             const subRowClass = subIndex % 2 === 0 ? 'submain' : 'subalternate';
-            
+
             return (
               <p key={childId} className={subRowClass}>
-                <label>
-                  <input 
-                    type="checkbox" 
-                    checked={isChildChecked}
-                    onChange={(e) => onToggle(childId, e.target.checked)}
-                  />
-                  {child.title}
-                </label>
+                {triState ? (
+                  <span className="uas-tristate-row">
+                    <span className="uas-tristate-name">{child.title}</span>
+                    <TriStateControl
+                      groupName={`adminbar-${childId}`}
+                      label={child.title}
+                      value={childTriValue}
+                      onChange={(v) => onTriToggle(childId, v)}
+                      strings={strings}
+                    />
+                  </span>
+                ) : (
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={isChildChecked}
+                      onChange={(e) => onToggle(childId, e.target.checked)}
+                    />
+                    {child.title}
+                  </label>
+                )}
               </p>
             );
           })}
@@ -74,7 +105,7 @@ const AdminBarMenuItem = ({ item, userOptions, onToggle, rowIndex, strings }) =>
  * AdminBarMenu component
  * Renders the list of WordPress admin bar menu items
  */
-const AdminBarMenu = ({ adminBarItems, userOptions, onToggle, strings }) => {
+const AdminBarMenu = ({ adminBarItems, userOptions, onToggle, onTriToggle, triState = false, strings }) => {
   // Calculate if all admin bar items are disabled
   const allItemIds = useMemo(() => {
     const ids = [];
@@ -116,6 +147,8 @@ const AdminBarMenu = ({ adminBarItems, userOptions, onToggle, strings }) => {
           userOptions={userOptions}
           onToggle={onToggle}
           rowIndex={index}
+          triState={triState}
+          onTriToggle={onTriToggle}
           strings={strings}
         />
       ))}

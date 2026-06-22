@@ -1,13 +1,13 @@
 {
   "name": "user-admin-simplifier",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Lets any Administrator simplify the WordPress Admin interface, on a per-user basis, by turning specific menu/submenu sections off.",
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
     "lint": "eslint src/",
-    "test:php": "php tests/test-menu-name-cleaning.php && php tests/test-menu-order.php",
+    "test:php": "php tests/test-menu-name-cleaning.php && php tests/test-menu-order.php && php tests/test-role-resolution.php",
     "phpstan": "php vendor/bin/phpstan analyse",
     "serve": "http-server . -p 8080 -c-1 --silent",
     "env:start": "wp-env start",

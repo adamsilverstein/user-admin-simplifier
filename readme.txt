@@ -4,7 +4,7 @@ Donate link:
 Tags: admin simplify menus submenus
 Requires at least: 3.0.1
 Tested up to: 6.9
-Stable tag: 3.0.1
+Stable tag: 3.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,6 +13,16 @@ Lets any Administrator simplify the WordPress Admin interface, on a per-user bas
 == Description ==
 
 Lets any Administrator simplify the WordPress Admin interface, on a per-user basis. Hide any specific menu or submenu (including in the admin bar) or hide the admin bar entirely.
+
+= Menu control modes =
+
+User Admin Simplifier offers three menu control modes:
+
+* **Per-user only** - the default mode. Configure menu, submenu, and admin bar visibility for each individual user. This is the original behavior and is unchanged.
+* **Role-based only** - configure menu, submenu, and admin bar visibility (and menu order) once per WordPress role. Every user inherits the settings for their role. Users with multiple roles get the union of all their roles' settings for visibility, while menu order comes from the primary role only.
+* **Role-based with per-user overrides** - applies the role defaults, but lets you override each menu item per user with an Inherit / Show / Hide control.
+
+Existing per-user configurations are preserved. Existing installs see no change unless an Administrator switches modes. Regardless of mode, the User Admin Simplifier settings page (under Tools) always remains accessible to Administrators, so you can never lock yourself out.
 
 == Installation ==
 
@@ -186,6 +196,11 @@ Make css class for +/- more specific to avoid conflicts.
 2. Check the menu section to disable. Click 'Save Changes' to apply your settings. Click 'Clear User Settings' to reset the disabled menus for the selected user.
 
 == Changelog ==
+
+= 3.1.0 =
+* Add role-based menu control: hide menus and submenus by user role, with optional per-user overrides.
+* New role editor with tri-state (inherit/show/hide) controls for fine-grained overrides.
+* Safeguard to prevent administrators from locking themselves out of the settings screen.
 
 = 3.0.1 =
 * Security hardening: sanitize option keys when saving user settings.

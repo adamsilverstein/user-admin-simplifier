@@ -60,6 +60,9 @@ if (!function_exists('delete_option')) {
 if (!function_exists('get_users')) {
     function get_users(array|string $args = []): array { return []; }
 }
+if (!function_exists('get_editable_roles')) {
+    function get_editable_roles(): array { return []; }
+}
 if (!function_exists('current_user_can')) {
     function current_user_can(string $capability, mixed ...$args): bool { return true; }
 }
@@ -101,6 +104,15 @@ if (!function_exists('wp_strip_all_tags')) {
 }
 if (!function_exists('__return_false')) {
     function __return_false(): bool { return false; }
+}
+
+// WordPress class stubs.
+if (!class_exists('WP_User')) {
+    class WP_User {
+        /** @var string[] */
+        public $roles = [];
+        public string $user_nicename = '';
+    }
 }
 
 // Global variables

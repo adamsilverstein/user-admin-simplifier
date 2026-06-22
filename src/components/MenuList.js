@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import TriStateControl from './TriStateControl';
 
 /**
  * MenuItem component
@@ -18,12 +19,16 @@ const MenuItem = ({
   onDragEnd,
   isDragging,
   isDropTarget,
+  triState,
+  onTriToggle,
   strings
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDraggable, setIsDraggable] = useState(false);
   const menuId = item.id;
   const isChecked = userOptions[menuId] === 1;
+  const triValue =
+    userOptions[menuId] === 1 ? 'hide' : userOptions[menuId] === 0 ? 'show' : 'inherit';
   const hasSubmenus = item.submenus && item.submenus.length > 0;
 
   const handleToggle = (e) => {
@@ -105,14 +110,23 @@ const MenuItem = ({
             ▼
           </button>
         </span>
-        <label>
-          <input
-            type="checkbox"
-            checked={isChecked}
-            onChange={handleToggle}
-          />
-          {item.name}
-        </label>
+        {triState ? (
+          <span className="uas-tristate-row">
+            <span className="uas-tristate-name">{item.name}</span>
+            <TriStateControl
+              groupName={`menu-${menuId}`}
+              label={item.name}
+              value={triValue}
+              onChange={(v) => onTriToggle(menuId, v)}
+              strings={strings}
+            />
+          </span>
+        ) : (
+          <label>
+            <input type="checkbox" checked={isChecked} onChange={handleToggle} />
+            {item.name}
+          </label>
+        )}
         {hasSubmenus && (
           <button
             type="button"
@@ -131,18 +145,33 @@ const MenuItem = ({
           {item.submenus.map((submenu, subIndex) => {
             const submenuId = submenu.id;
             const isSubmenuChecked = userOptions[submenuId] === 1;
+            const subTriValue =
+              userOptions[submenuId] === 1 ? 'hide' : userOptions[submenuId] === 0 ? 'show' : 'inherit';
             const subRowClass = subIndex % 2 === 0 ? 'submain' : 'subalternate';
 
             return (
               <p key={submenuId} className={subRowClass}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={isSubmenuChecked}
-                    onChange={(e) => onToggle(submenuId, e.target.checked)}
-                  />
-                  {submenu.name}
-                </label>
+                {triState ? (
+                  <span className="uas-tristate-row">
+                    <span className="uas-tristate-name">{submenu.name}</span>
+                    <TriStateControl
+                      groupName={`menu-${submenuId}`}
+                      label={submenu.name}
+                      value={subTriValue}
+                      onChange={(v) => onTriToggle(submenuId, v)}
+                      strings={strings}
+                    />
+                  </span>
+                ) : (
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={isSubmenuChecked}
+                      onChange={(e) => onToggle(submenuId, e.target.checked)}
+                    />
+                    {submenu.name}
+                  </label>
+                )}
               </p>
             );
           })}
@@ -156,7 +185,7 @@ const MenuItem = ({
  * MenuList component
  * Renders the list of WordPress admin menu items
  */
-const MenuList = ({ menuItems, userOptions, onToggle, onReorder, strings }) => {
+const MenuList = ({ menuItems, userOptions, onToggle, onTriToggle, onReorder, triState = false, strings }) => {
   const [dragIndex, setDragIndex] = useState(null);
   const [dropIndex, setDropIndex] = useState(null);
 
@@ -283,6 +312,8 @@ const MenuList = ({ menuItems, userOptions, onToggle, onReorder, strings }) => {
           onDragEnd={handleDragEnd}
           isDragging={dragIndex === index}
           isDropTarget={dropIndex === index && dragIndex !== null && dragIndex !== index}
+          triState={triState}
+          onTriToggle={onTriToggle}
           strings={strings}
         />
       ))}

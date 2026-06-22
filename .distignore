@@ -9,6 +9,7 @@
 /.gitignore
 
 # Development directories
+/docs
 /node_modules
 /src
 /tests
