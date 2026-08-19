@@ -3,8 +3,8 @@ Contributors: adamsilverstein
 Donate link:
 Tags: admin simplify menus submenus
 Requires at least: 3.0.1
-Tested up to: 6.9
-Stable tag: 3.1.0
+Tested up to: 7.1
+Stable tag: 3.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -196,6 +196,9 @@ Make css class for +/- more specific to avoid conflicts.
 2. Check the menu section to disable. Click 'Save Changes' to apply your settings. Click 'Clear User Settings' to reset the disabled menus for the selected user.
 
 == Changelog ==
+
+= 3.1.1 =
+* Confirm compatibility with WordPress 7.1.
 
 = 3.1.0 =
 * Add role-based menu control: hide menus and submenus by user role, with optional per-user overrides.
